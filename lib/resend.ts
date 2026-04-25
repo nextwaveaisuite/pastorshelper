@@ -1,8 +1,8 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function sendWelcomeEmail(email: string) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
   return resend.emails.send({
     from: "The Pastors Helper <noreply@thepastorshelper.com>",
     to: email,
