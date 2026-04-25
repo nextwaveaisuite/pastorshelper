@@ -10,81 +10,81 @@ export async function POST(req: Request) {
   const targetLanguage = language || "English";
 
   const levelInstructions: Record<string, string> = {
-    beginner: "Write for NEW BELIEVERS and new pastors. Use simple everyday words. No theological jargon. One clear idea per point. Short relatable sentences.",
-    intermediate: "Write for GROWING BELIEVERS. Include some historical context. Reference the original meaning of key words. Connect Old and New Testament. Challenge the audience to go deeper.",
-    advanced: "Write for MATURE MINISTERS. Use theological precision. Include Greek or Hebrew word insights. Make cross-testament connections. Add doctrinal depth and prophetic weight.",
+    beginner:     "Beginner level — simple everyday words, no jargon, short relatable sentences, one clear idea per point. Perfect for new believers and new pastors.",
+    intermediate: "Intermediate level — include historical context, reference original word meanings simply, connect Old and New Testament. For growing believers.",
+    advanced:     "Advanced level — use theological precision, include one key Greek or Hebrew word insight per point, make cross-testament connections. For mature ministers.",
   };
 
   const levelText = levelInstructions[level || "beginner"];
-  const inLanguage = targetLanguage !== "English" ? `Write ALL sermon content in ${targetLanguage}. Scripture references stay in standard format (e.g. John 3:16) but all other text must be in ${targetLanguage}.` : "";
+  const langInstruction = targetLanguage !== "English"
+    ? `\nWrite ALL sermon content in ${targetLanguage}. Scripture references stay in standard format (e.g. John 3:16) but all other content must be in ${targetLanguage}.`
+    : "";
 
-  // Separated system prompt forces JSON mode cleanly
-  const systemPrompt = `You are a Spirit-led sermon builder. You output ONLY valid JSON — no markdown, no backticks, no explanation, no text before or after. Your response must start with { and end with }. Every string value must be properly escaped. Never truncate your response mid-sentence.`;
+  const systemPrompt = `You are a Spirit-led sermon builder. Output ONLY valid JSON — no markdown, no backticks, no explanation. Start with { and end with }. CRITICAL: Every single field in the JSON must be completed. Never stop generating before the closing brace. Keep every field to exactly 1-2 sentences so the full sermon fits within the response.`;
 
-  const userPrompt = `Create a unique, Spirit-led sermon on this topic: "${topic}"
-Audience: ${audience}
-Tone: ${tone}
-Level: ${levelText}
-${inLanguage}
+  const userPrompt = `Create a unique Spirit-led sermon on: "${topic}"
+Audience: ${audience} | Tone: ${tone} | ${levelText}${langInstruction}
 
-Respond with this exact JSON structure. Keep EVERY field to 1-2 sentences — short and powerful:
+IMPORTANT: Keep EVERY field to 1-2 SHORT sentences. This ensures all sections complete fully.
+
+Return this complete JSON — all fields required, none can be empty:
 
 {
-  "title": "compelling sermon title",
+  "title": "sermon title",
+  "alternativeTitles": ["alt 1", "alt 2"],
   "anchorScripture": {
     "reference": "Book Chapter:Verse",
     "kjv": "KJV verse text",
     "nkjv": "NKJV verse text"
   },
-  "theme": "one sentence core revelation",
+  "theme": "one sentence core theme",
   "opening": {
-    "greeting": "warm opening to congregation",
-    "hook": "relatable hook or story opener"
+    "greeting": "1 sentence greeting",
+    "hook": "1 sentence relatable hook"
   },
   "foundation": {
-    "context": "historical or spiritual context",
-    "breakdown": "initial scripture breakdown"
+    "context": "1-2 sentences context",
+    "breakdown": "1-2 sentences breakdown"
   },
   "foreword": {
-    "whyItMatters": "why this message matters today",
-    "relatable": "relatable illustration"
+    "whyItMatters": "1-2 sentences",
+    "relatable": "1-2 sentences illustration"
   },
   "teachingPoints": [
     {
       "title": "Point 1 title",
-      "scripture": "supporting scripture reference and text",
-      "explanation": "explanation of this point",
-      "application": "practical application"
+      "scripture": "scripture ref — verse text",
+      "explanation": "1-2 sentences explanation",
+      "application": "1 sentence application"
     },
     {
       "title": "Point 2 title",
-      "scripture": "supporting scripture reference and text",
-      "explanation": "explanation of this point",
-      "application": "practical application"
+      "scripture": "scripture ref — verse text",
+      "explanation": "1-2 sentences explanation",
+      "application": "1 sentence application"
     },
     {
       "title": "Point 3 title",
-      "scripture": "supporting scripture reference and text",
-      "explanation": "explanation of this point",
-      "application": "practical application"
+      "scripture": "scripture ref — verse text",
+      "explanation": "1-2 sentences explanation",
+      "application": "1 sentence application"
     }
   ],
   "ministryFlow": {
-    "giftOfKnowledge": "prophetic word of knowledge",
-    "impartation": "impartation and activation language",
-    "edification": "words to build faith",
-    "slowDown": "reflective pause moment",
-    "returnToAnchor": "return to anchor scripture"
+    "giftOfKnowledge": "1 sentence prophetic word",
+    "impartation": "1 sentence activation",
+    "edification": "1 sentence encouragement",
+    "slowDown": "1 sentence reflective pause",
+    "returnToAnchor": "1 sentence return to anchor scripture"
   },
   "summary": {
     "keyTakeaways": ["takeaway 1", "takeaway 2", "takeaway 3"]
   },
   "altarCall": {
-    "invitation": "heartfelt altar call invitation",
-    "prayer": "guided prayer for congregation"
+    "invitation": "1-2 sentences invitation",
+    "prayer": "1-2 sentences guided prayer"
   },
-  "closingPrayer": "closing blessing and send-off",
-  "alternativeTitles": ["alt title 1", "alt title 2"]
+  "closingPrayer": "1-2 sentences closing blessing"
 }`;
 
   try {
@@ -97,7 +97,7 @@ Respond with this exact JSON structure. Keep EVERY field to 1-2 sentences — sh
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1600,
+        max_tokens: 1800,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
@@ -117,62 +117,89 @@ Respond with this exact JSON structure. Keep EVERY field to 1-2 sentences — sh
 
     console.log("Raw length:", rawText.length);
     console.log("Stop reason:", data.stop_reason);
-    console.log("First 100:", rawText.slice(0, 100));
+    console.log("First 80:", rawText.slice(0, 80));
+    console.log("Last 80:", rawText.slice(-80));
 
-    // Clean any accidental markdown fences
+    // Clean markdown fences
     let cleaned = rawText
       .replace(/^```json\s*/gi, "")
       .replace(/^```\s*/gi, "")
       .replace(/```\s*$/gi, "")
       .trim();
 
-    // Find the JSON boundaries
     const start = cleaned.indexOf("{");
-    const end = cleaned.lastIndexOf("}");
-
     if (start === -1) {
-      console.error("No opening brace found. Raw:", rawText.slice(0, 400));
+      console.error("No opening brace. Raw:", rawText.slice(0, 400));
       return NextResponse.json(
-        { error: "Could not find sermon content. Please try again." },
+        { error: "No sermon content returned. Please try again." },
         { status: 500 }
       );
     }
 
-    // If truncated (no closing brace), attempt to repair
-    let jsonString = end !== -1 && end > start
+    const end = cleaned.lastIndexOf("}");
+    let jsonString = end > start
       ? cleaned.slice(start, end + 1)
       : cleaned.slice(start);
 
-    // Attempt 1: parse as-is
+    // Attempt parse
     let sermon: Record<string, unknown> | null = null;
+
     try {
       sermon = JSON.parse(jsonString);
     } catch {
-      // Attempt 2: try to close any unclosed JSON by appending closing braces
-      console.warn("Initial parse failed — attempting JSON repair");
+      // Repair truncated JSON
+      console.warn("Parse failed — repairing JSON");
       const repaired = repairJson(jsonString);
       try {
         sermon = JSON.parse(repaired);
-        console.log("JSON repair succeeded");
+        console.log("Repair succeeded");
       } catch {
-        console.error("JSON repair also failed. String:", jsonString.slice(0, 600));
+        console.error("Repair failed. JSON:", jsonString.slice(0, 800));
         return NextResponse.json(
-          { error: "Sermon was generated but couldn't be saved. Please try again." },
+          { error: "Sermon could not be read. Please try again." },
           { status: 500 }
         );
       }
     }
 
-    // Ensure critical fields exist with fallbacks
     if (!sermon) {
-      return NextResponse.json({ error: "Empty sermon returned. Please try again." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Empty sermon returned. Please try again." },
+        { status: 500 }
+      );
     }
 
+    // Fill any missing sections with fallbacks so nothing renders empty
     sermon.title = sermon.title || topic;
+    sermon.alternativeTitles = (sermon.alternativeTitles as unknown[]) || [];
     sermon.theme = sermon.theme || "";
-    sermon.alternativeTitles = sermon.alternativeTitles || [];
-    sermon.teachingPoints = (sermon.teachingPoints as unknown[]) || [];
-    sermon.summary = (sermon.summary as Record<string, unknown>) || { keyTakeaways: [] };
+
+    const mf = (sermon.ministryFlow as Record<string, string>) || {};
+    sermon.ministryFlow = {
+      giftOfKnowledge: mf.giftOfKnowledge || "The Spirit is moving — receive what God has for you right now.",
+      impartation:     mf.impartation     || "Receive fresh fire and anointing for your calling.",
+      edification:     mf.edification     || "You are loved, chosen, and equipped by God for this season.",
+      slowDown:        mf.slowDown        || "Take a moment — let the Word settle deep in your spirit.",
+      returnToAnchor:  mf.returnToAnchor  || `Return to the anchor — this is what God says about ${topic}.`,
+    };
+
+    const sum = (sermon.summary as Record<string, unknown>) || {};
+    sermon.summary = {
+      keyTakeaways: (sum.keyTakeaways as string[]) || [
+        `God's Word on ${topic} is alive and active today.`,
+        "What you received today is meant to be lived, not just heard.",
+        "Take one step of faith this week based on this message.",
+      ],
+    };
+
+    const ac = (sermon.altarCall as Record<string, string>) || {};
+    sermon.altarCall = {
+      invitation: ac.invitation || "If this Word has touched your heart today, respond to God right now.",
+      prayer:     ac.prayer     || "Lord, I receive Your Word into my heart. Transform me by Your truth. In Jesus' name, Amen.",
+    };
+
+    sermon.closingPrayer = (sermon.closingPrayer as string) ||
+      "May the God of peace sanctify you wholly — spirit, soul, and body — until the coming of our Lord Jesus Christ. Amen.";
 
     return NextResponse.json({ sermon });
 
@@ -185,18 +212,10 @@ Respond with this exact JSON structure. Keep EVERY field to 1-2 sentences — sh
   }
 }
 
-// Attempt to close unclosed JSON by counting braces and brackets
 function repairJson(str: string): string {
-  let result = str;
-
-  // Remove trailing comma before attempting close
-  result = result.replace(/,\s*$/, "");
-
-  // Count unclosed structures
-  let braces = 0;
-  let brackets = 0;
-  let inString = false;
-  let escape = false;
+  let result = str.replace(/,\s*$/, "");
+  let braces = 0, brackets = 0;
+  let inString = false, escape = false;
 
   for (const ch of result) {
     if (escape) { escape = false; continue; }
@@ -209,10 +228,7 @@ function repairJson(str: string): string {
     if (ch === "]") brackets--;
   }
 
-  // Close any open strings first (if truncated mid-string)
   if (inString) result += '"';
-
-  // Close open arrays and objects
   for (let i = 0; i < brackets; i++) result += "]";
   for (let i = 0; i < braces; i++) result += "}";
 
