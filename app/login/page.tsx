@@ -32,7 +32,7 @@ export default function LoginPage() {
     const { error: authError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `https://thepastorshelper.netlify.app/dashboard`,
       },
     });
 
