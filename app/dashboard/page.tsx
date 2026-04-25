@@ -10,6 +10,38 @@ import Link from "next/link";
 
 const AUDIENCES = ["General Congregation", "Youth", "Outreach / Evangelism", "Men's Ministry", "Women's Ministry", "Leaders"];
 const TONES = ["Teaching", "Prophetic", "Evangelistic", "Pastoral", "Conviction"];
+
+const LANGUAGES = [
+  { code: "English", label: "English", flag: "🇬🇧" },
+  { code: "Spanish", label: "Español", flag: "🇪🇸" },
+  { code: "French", label: "Français", flag: "🇫🇷" },
+  { code: "Portuguese", label: "Português", flag: "🇧🇷" },
+  { code: "German", label: "Deutsch", flag: "🇩🇪" },
+  { code: "Italian", label: "Italiano", flag: "🇮🇹" },
+  { code: "Dutch", label: "Nederlands", flag: "🇳🇱" },
+  { code: "Afrikaans", label: "Afrikaans", flag: "🇿🇦" },
+  { code: "Zulu", label: "IsiZulu", flag: "🇿🇦" },
+  { code: "Swahili", label: "Kiswahili", flag: "🇰🇪" },
+  { code: "Yoruba", label: "Yorùbá", flag: "🇳🇬" },
+  { code: "Igbo", label: "Igbo", flag: "🇳🇬" },
+  { code: "Hausa", label: "Hausa", flag: "🇳🇬" },
+  { code: "Amharic", label: "አማርኛ", flag: "🇪🇹" },
+  { code: "Arabic", label: "العربية", flag: "🇸🇦" },
+  { code: "Hindi", label: "हिंदी", flag: "🇮🇳" },
+  { code: "Tamil", label: "தமிழ்", flag: "🇮🇳" },
+  { code: "Telugu", label: "తెలుగు", flag: "🇮🇳" },
+  { code: "Tagalog", label: "Filipino", flag: "🇵🇭" },
+  { code: "Indonesian", label: "Bahasa Indonesia", flag: "🇮🇩" },
+  { code: "Malay", label: "Bahasa Melayu", flag: "🇲🇾" },
+  { code: "Mandarin Chinese", label: "中文", flag: "🇨🇳" },
+  { code: "Korean", label: "한국어", flag: "🇰🇷" },
+  { code: "Japanese", label: "日本語", flag: "🇯🇵" },
+  { code: "Russian", label: "Русский", flag: "🇷🇺" },
+  { code: "Ukrainian", label: "Українська", flag: "🇺🇦" },
+  { code: "Romanian", label: "Română", flag: "🇷🇴" },
+  { code: "Polish", label: "Polski", flag: "🇵🇱" },
+];
+
 const LEVELS = [
   { key: "beginner", label: "Beginner", desc: "Simple language, clear basics, new believers", color: "#10b981" },
   { key: "intermediate", label: "Intermediate", desc: "Some depth, scripture context, growing faith", color: "#3b82f6" },
@@ -38,6 +70,7 @@ export default function Dashboard() {
   const [audience, setAudience] = useState("General Congregation");
   const [tone, setTone] = useState("Teaching");
   const [level, setLevel] = useState("beginner");
+  const [language, setLanguage] = useState("English");
   const [generating, setGenerating] = useState(false);
   const [generatedSermon, setGeneratedSermon] = useState<Sermon["content"] | null>(null);
   const [saving, setSaving] = useState(false);
@@ -92,7 +125,7 @@ export default function Dashboard() {
     if (!topic.trim()) { setError("Please enter or choose a topic."); return; }
     setGenerating(true); setError(""); setGeneratedSermon(null); setSaveSuccess(false); setShowTopics(false);
     try {
-      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ topic, audience, tone, level }) });
+      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ topic, audience, tone, level, language }) });
       const text = await res.text();
       let data;
       try { data = JSON.parse(text); } catch { throw new Error("Server error — please try again."); }
@@ -299,6 +332,19 @@ export default function Dashboard() {
                     ))}
                   </div>
 
+
+                  {/* Language */}
+                  <label style={{ display: "block", color: "#a8956e", fontSize: "11px", letterSpacing: "1px", marginBottom: "10px", textTransform: "uppercase" as const }}>Language</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", marginBottom: "16px", maxHeight: "200px", overflowY: "auto", padding: "2px" }}>
+                    {LANGUAGES.map((l) => (
+                      <button key={l.code} onClick={() => setLanguage(l.code)} style={{ padding: "10px 12px", borderRadius: "8px", border: "1px solid", borderColor: language === l.code ? "rgba(245,158,11,0.5)" : "rgba(245,158,11,0.1)", background: language === l.code ? "rgba(245,158,11,0.1)" : "transparent", color: language === l.code ? "#f59e0b" : "#78716c", cursor: "pointer", textAlign: "left" as const, fontSize: "13px", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "16px" }}>{l.flag}</span>
+                        <span>{l.label}</span>
+                        {language === l.code && <span style={{ marginLeft: "auto", color: "#f59e0b" }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+
                   {/* Level */}
                   <label style={{ display: "block", color: "#a8956e", fontSize: "11px", letterSpacing: "1px", marginBottom: "10px", textTransform: "uppercase" as const }}>Sermon Level</label>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
@@ -336,9 +382,16 @@ export default function Dashboard() {
               <div className="animate-fade-in">
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "4px", gap: "10px" }}>
                   <h1 className="font-serif" style={{ color: "#fef3c7", fontSize: "24px", lineHeight: 1.2 }}>{generatedSermon.title}</h1>
-                  <span style={{ flexShrink: 0, padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 600, background: level === "beginner" ? "rgba(16,185,129,0.15)" : level === "intermediate" ? "rgba(59,130,246,0.15)" : "rgba(139,92,246,0.15)", color: level === "beginner" ? "#10b981" : level === "intermediate" ? "#3b82f6" : "#8b5cf6" }}>
-                    {level}
-                  </span>
+                  <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
+                    <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 600, background: level === "beginner" ? "rgba(16,185,129,0.15)" : level === "intermediate" ? "rgba(59,130,246,0.15)" : "rgba(139,92,246,0.15)", color: level === "beginner" ? "#10b981" : level === "intermediate" ? "#3b82f6" : "#8b5cf6" }}>
+                      {level}
+                    </span>
+                    {language !== "English" && (
+                      <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 600, background: "rgba(245,158,11,0.12)", color: "#f59e0b" }}>
+                        {LANGUAGES.find(l => l.code === language)?.flag} {LANGUAGES.find(l => l.code === language)?.label}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p style={{ color: "#78716c", fontSize: "12px", marginBottom: "20px" }}>{tone} · {audience}</p>
 
