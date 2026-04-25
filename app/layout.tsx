@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     canonical: "https://thepastorshelper.com",
   },
   verification: {
-    google: "add-your-google-search-console-verification-code-here",
+    google: "VLL5j4c-dDjxxAJGOIIjqzbOIGyp2d1l-RZVsfTaQaY",
   },
   icons: {
     icon: "/favicon.ico",
