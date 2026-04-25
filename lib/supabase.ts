@@ -1,9 +1,28 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Lazy singleton — only created on first call, never at module load time
+let _client: SupabaseClient | null = null;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+function getClient(): SupabaseClient {
+  if (!_client) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    _client = createClient(url, key);
+  }
+  return _client;
+}
+
+// Proxy object — safe to import anywhere, only initialises at runtime
+export const supabase = {
+  auth: {
+    getSession: () => getClient().auth.getSession(),
+    getUser: () => getClient().auth.getUser(),
+    signInWithOtp: (params: Parameters<SupabaseClient["auth"]["signInWithOtp"]>[0]) =>
+      getClient().auth.signInWithOtp(params),
+    signOut: () => getClient().auth.signOut(),
+  },
+  from: (table: string) => getClient().from(table),
+};
 
 export type Sermon = {
   id: string;
