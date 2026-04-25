@@ -1,0 +1,27 @@
+{
+  "name": "The Pastors Helper",
+  "short_name": "Pastors Helper",
+  "description": "Spirit-Led Sermon Builder for Pastors and Ministers",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0a05",
+  "theme_color": "#f59e0b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "education", "religion"],
+  "lang": "en",
+  "dir": "ltr"
+}
