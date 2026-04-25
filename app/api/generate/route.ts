@@ -7,71 +7,67 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Topic is required" }, { status: 400 });
   }
 
-  const systemPrompt = `You are a Spirit-led sermon builder. You MUST respond with valid JSON only. No markdown. No code fences. No backticks. No explanation. Just raw JSON.`;
+  const prompt = `You are a Spirit-led sermon builder. Create a sermon on "${topic}" for ${audience} in a ${tone} style.
 
-  const prompt = `Create a complete structured sermon on: "${topic}"
-Audience: ${audience}
-Tone: ${tone}
-
-Respond with ONLY this JSON structure, no other text:
+You MUST return ONLY raw JSON. No markdown. No code fences. No backticks. No explanation before or after. Start your response with { and end with }.
 
 {
-  "title": "Sermon title",
-  "alternativeTitles": ["Title 2", "Title 3"],
+  "title": "Sermon title here",
+  "alternativeTitles": ["Alt title 1", "Alt title 2"],
   "anchorScripture": {
     "reference": "Book Chapter:Verse",
-    "kjv": "Full KJV verse text",
-    "nkjv": "Full NKJV verse text"
+    "kjv": "KJV verse text here",
+    "nkjv": "NKJV verse text here"
   },
   "theme": "One sentence core theme",
   "opening": {
-    "greeting": "Warm greeting to congregation",
+    "greeting": "Opening greeting to congregation",
     "atmosphere": "Set the atmosphere",
     "hook": "Relatable opening hook"
   },
   "foundation": {
     "context": "Historical and spiritual context",
-    "breakdown": "Initial breakdown of the scripture"
+    "breakdown": "Breakdown of the scripture"
   },
   "foreword": {
-    "whyItMatters": "Why this message matters today",
+    "whyItMatters": "Why this message matters",
     "relatable": "Relatable story or illustration"
   },
   "teachingPoints": [
     {
-      "title": "Point 1 title",
-      "scripture": "Supporting scripture and text",
-      "explanation": "Explanation of this point",
-      "application": "Practical application"
+      "title": "Point 1",
+      "scripture": "Scripture ref and text",
+      "explanation": "Explanation",
+      "application": "Application"
     },
     {
-      "title": "Point 2 title",
-      "scripture": "Supporting scripture and text",
-      "explanation": "Explanation of this point",
-      "application": "Practical application"
+      "title": "Point 2",
+      "scripture": "Scripture ref and text",
+      "explanation": "Explanation",
+      "application": "Application"
     },
     {
-      "title": "Point 3 title",
-      "scripture": "Supporting scripture and text",
-      "explanation": "Explanation of this point",
-      "application": "Practical application"
+      "title": "Point 3",
+      "scripture": "Scripture ref and text",
+      "explanation": "Explanation",
+      "application": "Application"
     }
   ],
   "ministryFlow": {
-    "giftOfKnowledge": "Word of knowledge for the congregation",
-    "impartation": "Activation and impartation language",
-    "edification": "Words to build up faith",
-    "slowDown": "Reflective pause moment",
-    "returnToAnchor": "Bring message back to anchor scripture"
+    "giftOfKnowledge": "Word of knowledge",
+    "impartation": "Impartation language",
+    "edification": "Words to build faith",
+    "slowDown": "Reflective pause",
+    "returnToAnchor": "Return to anchor scripture"
   },
   "summary": {
     "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
   },
   "altarCall": {
-    "invitation": "Heartfelt altar call invitation",
-    "prayer": "Full guided prayer text"
+    "invitation": "Altar call invitation",
+    "prayer": "Guided prayer text"
   },
-  "closingPrayer": "Blessing and send-off prayer"
+  "closingPrayer": "Closing blessing and prayer"
 }`;
 
   try {
@@ -84,17 +80,16 @@ Respond with ONLY this JSON structure, no other text:
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 2000,
-        system: systemPrompt,
+        max_tokens: 3000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Anthropic API error:", errText);
+      console.error("Anthropic API error:", response.status, errText);
       return NextResponse.json(
-        { error: `API error: ${response.status}. Check your API key.` },
+        { error: `API error ${response.status} — check your API key.` },
         { status: 500 }
       );
     }
@@ -102,19 +97,22 @@ Respond with ONLY this JSON structure, no other text:
     const data = await response.json();
     const rawText: string = data.content?.[0]?.text || "";
 
-    // Strip any markdown fences, whitespace, or extra characters
-    const cleaned = rawText
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/i, "")
-      .replace(/```\s*$/i, "")
+    console.log("Raw response length:", rawText.length);
+    console.log("Raw response start:", rawText.slice(0, 100));
+
+    // Aggressively clean the response
+    let cleaned = rawText
+      .replace(/^```json\s*/gi, "")
+      .replace(/^```\s*/gi, "")
+      .replace(/```\s*$/gi, "")
       .trim();
 
-    // Find the JSON object — start from first { to last }
+    // Extract JSON object
     const start = cleaned.indexOf("{");
     const end = cleaned.lastIndexOf("}");
 
-    if (start === -1 || end === -1) {
-      console.error("No JSON object found in response:", cleaned.slice(0, 200));
+    if (start === -1 || end === -1 || end <= start) {
+      console.error("No valid JSON braces found. Raw text:", rawText.slice(0, 500));
       return NextResponse.json(
         { error: "Could not find sermon data in response. Please try again." },
         { status: 500 }
@@ -127,15 +125,16 @@ Respond with ONLY this JSON structure, no other text:
     try {
       sermon = JSON.parse(jsonString);
     } catch (parseErr) {
-      console.error("JSON parse error:", parseErr);
-      console.error("Attempted to parse:", jsonString.slice(0, 300));
+      console.error("JSON parse failed:", parseErr);
+      console.error("JSON string attempted:", jsonString.slice(0, 500));
       return NextResponse.json(
-        { error: "Failed to parse sermon. Please try again." },
+        { error: "Sermon was generated but could not be read. Please try again." },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ sermon });
+
   } catch (err) {
     console.error("Generate route error:", err);
     return NextResponse.json(
