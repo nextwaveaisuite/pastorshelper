@@ -186,7 +186,7 @@ export default function Home() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
             {[
-              { icon: "📖", title: "Anchor Scripture Engine",     desc: "AI finds your primary verse, cross-references, and the core theme that ties the whole sermon together." },
+              { icon: "📖", title: "Anchor Scripture Engine",     desc: "ASE finds your primary verse, cross-references, and the core theme that ties the whole sermon together." },
               { icon: "🏗️", title: "9-Section Sermon Blueprint", desc: "Opening, Foundation, Foreword, 3 Teaching Points, Ministry Flow, Altar Call, and Closing Prayer — fully structured." },
               { icon: "🔥", title: "Deep Ministry Flow",          desc: "Gift of Knowledge, Impartation, Edification, Slow Down moments, and Return to Anchor — built for Spirit-led delivery." },
               { icon: "🎤", title: "Preach Mode",                 desc: "Full-screen delivery view designed for behind the pulpit. Large text, clean layout, section by section." },
