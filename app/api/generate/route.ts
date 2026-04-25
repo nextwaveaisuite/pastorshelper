@@ -7,78 +7,72 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Topic is required" }, { status: 400 });
   }
 
-  const systemPrompt = `You are a Spirit-led sermon builder assistant for The Pastors Helper. You create structured, Scripture-rich sermon content for pastors and ministers. Always respond with valid JSON only, no markdown, no extra text.`;
+  const systemPrompt = `You are a Spirit-led sermon builder. You MUST respond with valid JSON only. No markdown. No code fences. No backticks. No explanation. Just raw JSON.`;
 
-  const prompt = `Create a complete, structured sermon on the topic/scripture: "${topic}"
+  const prompt = `Create a complete structured sermon on: "${topic}"
 Audience: ${audience}
 Tone: ${tone}
 
-Return ONLY a valid JSON object with this exact structure:
+Respond with ONLY this JSON structure, no other text:
 
 {
-  "title": "Powerful sermon title",
-  "alternativeTitles": ["Alternative title 1", "Alternative title 2"],
+  "title": "Sermon title",
+  "alternativeTitles": ["Title 2", "Title 3"],
   "anchorScripture": {
     "reference": "Book Chapter:Verse",
-    "kjv": "Full KJV text of the verse",
-    "nkjv": "Full NKJV text of the verse"
+    "kjv": "Full KJV verse text",
+    "nkjv": "Full NKJV verse text"
   },
-  "theme": "One sentence core revelation/theme",
+  "theme": "One sentence core theme",
   "opening": {
-    "greeting": "Warm, engaging greeting to the congregation",
-    "atmosphere": "Set the atmosphere and context",
-    "hook": "Relatable opening hook or story"
+    "greeting": "Warm greeting to congregation",
+    "atmosphere": "Set the atmosphere",
+    "hook": "Relatable opening hook"
   },
   "foundation": {
-    "context": "Historical and cultural context of the scripture",
-    "breakdown": "Spiritual breakdown and initial revelation of the anchor scripture"
+    "context": "Historical and spiritual context",
+    "breakdown": "Initial breakdown of the scripture"
   },
   "foreword": {
-    "whyItMatters": "Why this message is vital for today",
-    "relatable": "A relatable story, illustration, or connection to daily life"
+    "whyItMatters": "Why this message matters today",
+    "relatable": "Relatable story or illustration"
   },
   "teachingPoints": [
     {
-      "title": "Point title",
-      "scripture": "Supporting scripture reference and text",
-      "explanation": "Deep explanation of this point",
-      "application": "Practical application for the congregation"
+      "title": "Point 1 title",
+      "scripture": "Supporting scripture and text",
+      "explanation": "Explanation of this point",
+      "application": "Practical application"
     },
     {
-      "title": "Point title",
-      "scripture": "Supporting scripture reference and text",
-      "explanation": "Deep explanation of this point",
-      "application": "Practical application for the congregation"
+      "title": "Point 2 title",
+      "scripture": "Supporting scripture and text",
+      "explanation": "Explanation of this point",
+      "application": "Practical application"
     },
     {
-      "title": "Point title",
-      "scripture": "Supporting scripture reference and text",
-      "explanation": "Deep explanation of this point",
-      "application": "Practical application for the congregation"
+      "title": "Point 3 title",
+      "scripture": "Supporting scripture and text",
+      "explanation": "Explanation of this point",
+      "application": "Practical application"
     }
   ],
   "ministryFlow": {
-    "giftOfKnowledge": "A word of knowledge or prophetic insight for the congregation",
-    "impartation": "Activation language — words to impart faith, healing, or breakthrough",
-    "edification": "Encouraging words to build up the congregation's faith",
-    "slowDown": "A slow-down moment — reflective pause for spiritual engagement",
-    "returnToAnchor": "Bring the message full circle back to the anchor scripture with fresh revelation"
+    "giftOfKnowledge": "Word of knowledge for the congregation",
+    "impartation": "Activation and impartation language",
+    "edification": "Words to build up faith",
+    "slowDown": "Reflective pause moment",
+    "returnToAnchor": "Bring message back to anchor scripture"
   },
   "summary": {
-    "keyTakeaways": [
-      "Key takeaway 1",
-      "Key takeaway 2",
-      "Key takeaway 3"
-    ]
+    "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
   },
   "altarCall": {
-    "invitation": "Heartfelt invitation for response — salvation, rededication, or specific response",
-    "prayer": "Full guided prayer for the congregation to pray aloud"
+    "invitation": "Heartfelt altar call invitation",
+    "prayer": "Full guided prayer text"
   },
-  "closingPrayer": "A rich blessing and send-off prayer over the congregation"
-}
-
-Make it authentic, Spirit-led, and powerful. Use real scripture references. Tailor tone and language for: ${audience} in a ${tone} style.`;
+  "closingPrayer": "Blessing and send-off prayer"
+}`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -97,28 +91,56 @@ Make it authentic, Spirit-led, and powerful. Use real scripture references. Tail
     });
 
     if (!response.ok) {
-      const err = await response.text();
-      console.error("Anthropic API error:", err);
-      return NextResponse.json({ error: "AI generation failed. Check your API key." }, { status: 500 });
+      const errText = await response.text();
+      console.error("Anthropic API error:", errText);
+      return NextResponse.json(
+        { error: `API error: ${response.status}. Check your API key.` },
+        { status: 500 }
+      );
     }
 
     const data = await response.json();
-    const rawText = data.content?.[0]?.text || "";
+    const rawText: string = data.content?.[0]?.text || "";
 
-    // Strip any markdown code fences if present
-    const cleaned = rawText.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+    // Strip any markdown fences, whitespace, or extra characters
+    const cleaned = rawText
+      .replace(/^```json\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```\s*$/i, "")
+      .trim();
+
+    // Find the JSON object — start from first { to last }
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+
+    if (start === -1 || end === -1) {
+      console.error("No JSON object found in response:", cleaned.slice(0, 200));
+      return NextResponse.json(
+        { error: "Could not find sermon data in response. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    const jsonString = cleaned.slice(start, end + 1);
 
     let sermon;
     try {
-      sermon = JSON.parse(cleaned);
-    } catch {
-      console.error("JSON parse error:", cleaned.slice(0, 200));
-      return NextResponse.json({ error: "Failed to parse sermon structure. Please try again." }, { status: 500 });
+      sermon = JSON.parse(jsonString);
+    } catch (parseErr) {
+      console.error("JSON parse error:", parseErr);
+      console.error("Attempted to parse:", jsonString.slice(0, 300));
+      return NextResponse.json(
+        { error: "Failed to parse sermon. Please try again." },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ sermon });
   } catch (err) {
-    console.error("Generate error:", err);
-    return NextResponse.json({ error: "Server error. Please try again." }, { status: 500 });
+    console.error("Generate route error:", err);
+    return NextResponse.json(
+      { error: "Server error. Please try again." },
+      { status: 500 }
+    );
   }
 }
