@@ -3,12 +3,14 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase, Sermon } from "@/lib/supabase";
+import { supabase, Sermon, Series } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const AUDIENCES = ["General Congregation", "Youth", "Outreach / Evangelism", "Men's Ministry", "Women's Ministry", "Leaders"];
 const TONES = ["Teaching", "Prophetic", "Evangelistic", "Pastoral", "Conviction"];
+
+type SeriesWithSermons = Series & { sermons: Partial<Sermon>[] };
 
 function SermonSection({ id, label, children, gold = false }: { id: string; label: string; children: React.ReactNode; gold?: boolean }) {
   return (
@@ -22,7 +24,11 @@ function SermonSection({ id, label, children, gold = false }: { id: string; labe
 export default function Dashboard() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [sermons, setSermons] = useState<Sermon[]>([]);
+  const [seriesList, setSeriesList] = useState<SeriesWithSermons[]>([]);
   const [loadingSermons, setLoadingSermons] = useState(true);
+  const [loadingSeries, setLoadingSeries] = useState(true);
+
+  // Generator state
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("General Congregation");
   const [tone, setTone] = useState("Teaching");
@@ -32,7 +38,16 @@ export default function Dashboard() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState("");
   const [preachMode, setPreachMode] = useState(false);
-  const [activeTab, setActiveTab] = useState<"generate" | "library" | "menu">("generate");
+  const [activeTab, setActiveTab] = useState<"generate" | "library" | "series" | "menu">("generate");
+
+  // Series state
+  const [showNewSeries, setShowNewSeries] = useState(false);
+  const [newSeriesName, setNewSeriesName] = useState("");
+  const [newSeriesDesc, setNewSeriesDesc] = useState("");
+  const [creatingSeries, setCreatingSeries] = useState(false);
+  const [expandedSeries, setExpandedSeries] = useState<string | null>(null);
+  const [assigningSermon, setAssigningSermon] = useState<string | null>(null); // sermon id being assigned
+
   const router = useRouter();
 
   const loadSermons = useCallback(async (userId: string) => {
@@ -42,13 +57,22 @@ export default function Dashboard() {
     setLoadingSermons(false);
   }, []);
 
+  const loadSeries = useCallback(async (userId: string) => {
+    setLoadingSeries(true);
+    const res = await fetch("/api/series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId }) });
+    const data = await res.json();
+    setSeriesList(data.series || []);
+    setLoadingSeries(false);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) { router.replace("/login"); return; }
       setUser(data.session.user);
       loadSermons(data.session.user.id);
+      loadSeries(data.session.user.id);
     });
-  }, [router, loadSermons]);
+  }, [router, loadSermons, loadSeries]);
 
   const generateSermon = async () => {
     if (!topic.trim()) { setError("Please enter a topic or scripture reference."); return; }
@@ -60,7 +84,6 @@ export default function Dashboard() {
       try { data = JSON.parse(text); } catch { throw new Error("Server error — make sure ANTHROPIC_API_KEY is set in Netlify environment variables."); }
       if (data.error) throw new Error(data.error);
       setGeneratedSermon(data.sermon);
-      setActiveTab("generate");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to generate. Please try again.");
@@ -79,6 +102,32 @@ export default function Dashboard() {
   const deleteSermon = async (id: string) => {
     await fetch("/api/delete-sermon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, user_id: user?.id }) });
     loadSermons(user!.id);
+    loadSeries(user!.id);
+  };
+
+  const createSeries = async () => {
+    if (!newSeriesName.trim() || !user) return;
+    setCreatingSeries(true);
+    const res = await fetch("/api/create-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user.id, name: newSeriesName, description: newSeriesDesc }) });
+    const data = await res.json();
+    setCreatingSeries(false);
+    if (data.success) {
+      setNewSeriesName(""); setNewSeriesDesc(""); setShowNewSeries(false);
+      loadSeries(user.id);
+    }
+  };
+
+  const deleteSeries = async (id: string) => {
+    await fetch("/api/delete-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, user_id: user?.id }) });
+    loadSeries(user!.id);
+    loadSermons(user!.id);
+  };
+
+  const assignToSeries = async (sermonId: string, seriesId: string | null) => {
+    await fetch("/api/assign-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sermon_id: sermonId, series_id: seriesId, user_id: user?.id }) });
+    setAssigningSermon(null);
+    loadSermons(user!.id);
+    loadSeries(user!.id);
   };
 
   const exportPDF = async () => {
@@ -115,7 +164,7 @@ export default function Dashboard() {
 
   // PREACH MODE
   if (preachMode && generatedSermon) return (
-    <div style={{ minHeight: "100vh", background: "#0a0704", padding: "0" }}>
+    <div style={{ minHeight: "100vh", background: "#0a0704" }}>
       <div style={{ position: "sticky", top: 0, background: "#0a0704", borderBottom: "1px solid rgba(245,158,11,0.1)", padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 20 }}>
         <h2 className="font-serif" style={{ color: "#f59e0b", fontSize: "16px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>{generatedSermon.title}</h2>
         <button onClick={() => setPreachMode(false)} className="btn-ghost" style={{ padding: "8px 16px", borderRadius: "6px", fontSize: "13px", flexShrink: 0 }}>✕ Exit</button>
@@ -152,7 +201,7 @@ export default function Dashboard() {
     <div style={{ minHeight: "100vh", background: "#0f0a05", paddingBottom: "80px" }}>
       <div style={{ position: "fixed", inset: 0, backgroundImage: "radial-gradient(ellipse 80% 40% at 50% -5%, rgba(245,158,11,0.07) 0%, transparent 60%)", pointerEvents: "none", zIndex: 0 }} />
 
-      {/* Mobile Header */}
+      {/* Header */}
       <header style={{ position: "sticky", top: 0, background: "rgba(15,10,5,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(245,158,11,0.08)", padding: "12px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 50 }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
           <span style={{ fontSize: "18px" }}>✝</span>
@@ -161,31 +210,20 @@ export default function Dashboard() {
         <span style={{ color: "#57534e", fontSize: "12px", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
       </header>
 
-      {/* Main Content */}
       <main style={{ padding: "20px", maxWidth: "700px", margin: "0 auto", position: "relative", zIndex: 10 }}>
 
-        {/* GENERATE TAB */}
+        {/* ── GENERATE TAB ── */}
         {activeTab === "generate" && (
           <div>
-            {/* Build form */}
             {!generatedSermon && (
               <div className="glass" style={{ borderRadius: "12px", padding: "20px", marginBottom: "20px" }}>
                 <h2 className="font-serif" style={{ color: "#fef3c7", fontSize: "20px", marginBottom: "20px" }}>Build a Sermon</h2>
-
                 <label style={{ display: "block", color: "#a8956e", fontSize: "11px", letterSpacing: "1px", marginBottom: "8px", textTransform: "uppercase" as const }}>Topic or Scripture</label>
-                <input
-                  type="text"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="e.g. Faith, John 3:16, Healing..."
-                  style={{ width: "100%", padding: "13px 14px", fontSize: "16px", borderRadius: "8px", marginBottom: "16px" }}
-                />
-
+                <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Faith, John 3:16, Healing..." style={{ width: "100%", padding: "13px 14px", fontSize: "16px", borderRadius: "8px", marginBottom: "16px" }} />
                 <label style={{ display: "block", color: "#a8956e", fontSize: "11px", letterSpacing: "1px", marginBottom: "8px", textTransform: "uppercase" as const }}>Audience</label>
                 <select value={audience} onChange={(e) => setAudience(e.target.value)} style={{ width: "100%", padding: "13px 14px", fontSize: "15px", borderRadius: "8px", marginBottom: "16px" }}>
                   {AUDIENCES.map((a) => <option key={a}>{a}</option>)}
                 </select>
-
                 <label style={{ display: "block", color: "#a8956e", fontSize: "11px", letterSpacing: "1px", marginBottom: "10px", textTransform: "uppercase" as const }}>Tone</label>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "20px" }}>
                   {TONES.map((t) => (
@@ -194,16 +232,13 @@ export default function Dashboard() {
                     </button>
                   ))}
                 </div>
-
                 {error && <p style={{ color: "#f87171", fontSize: "13px", marginBottom: "12px" }}>{error}</p>}
-
                 <button onClick={generateSermon} disabled={generating} className="btn-gold" style={{ width: "100%", padding: "15px", borderRadius: "8px", fontSize: "16px", opacity: generating ? 0.7 : 1, cursor: generating ? "not-allowed" : "pointer" }}>
                   {generating ? "Seeking the Word..." : "✦ Generate Sermon"}
                 </button>
               </div>
             )}
 
-            {/* Loading */}
             {generating && (
               <div className="glass" style={{ borderRadius: "12px", padding: "40px 20px", textAlign: "center" }}>
                 <div className="font-serif" style={{ color: "#f59e0b", fontSize: "18px", marginBottom: "10px" }}>Seeking the Word...</div>
@@ -214,14 +249,11 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Generated Sermon */}
             {generatedSermon && !generating && (
               <div className="animate-fade-in">
-                {/* Title */}
                 <h1 className="font-serif" style={{ color: "#fef3c7", fontSize: "26px", lineHeight: 1.2, marginBottom: "4px" }}>{generatedSermon.title}</h1>
                 <p style={{ color: "#78716c", fontSize: "12px", marginBottom: "20px" }}>{tone} · {audience}</p>
 
-                {/* Action buttons - scrollable row */}
                 <div style={{ display: "flex", gap: "10px", marginBottom: "20px", overflowX: "auto", paddingBottom: "4px" }}>
                   {[
                     { label: "🎤 Preach", action: () => setPreachMode(true) },
@@ -235,7 +267,6 @@ export default function Dashboard() {
                   ))}
                 </div>
 
-                {/* Anchor Scripture */}
                 <SermonSection id="s0" label="✝ Anchor Scripture" gold>
                   <p style={{ color: "#f59e0b", fontSize: "14px", fontWeight: 600, marginBottom: "10px" }}>{generatedSermon.anchorScripture?.reference}</p>
                   <p className="font-serif" style={{ fontSize: "16px", lineHeight: 1.8, fontStyle: "italic", color: "#fde68a", marginBottom: "12px" }}>&ldquo;{generatedSermon.anchorScripture?.kjv}&rdquo;</p>
@@ -246,25 +277,21 @@ export default function Dashboard() {
                   </div>
                 </SermonSection>
 
-                {/* Opening */}
                 <SermonSection id="s1" label="🙏 Opening">
                   <p style={{ color: "#fef3c7", lineHeight: 1.8, marginBottom: "10px", fontSize: "14px" }}>{generatedSermon.opening?.greeting}</p>
                   <p style={{ color: "#a8956e", lineHeight: 1.8, fontSize: "14px" }}>{generatedSermon.opening?.hook}</p>
                 </SermonSection>
 
-                {/* Foundation */}
                 <SermonSection id="s2" label="📖 Foundation">
                   <p style={{ color: "#a8956e", lineHeight: 1.8, marginBottom: "12px", fontSize: "14px" }}>{generatedSermon.foundation?.context}</p>
                   <p style={{ color: "#fef3c7", lineHeight: 1.8, fontSize: "14px" }}>{generatedSermon.foundation?.breakdown}</p>
                 </SermonSection>
 
-                {/* Foreword */}
                 <SermonSection id="s3" label="💬 Foreword">
                   <p style={{ color: "#fef3c7", lineHeight: 1.8, marginBottom: "10px", fontSize: "14px" }}>{generatedSermon.foreword?.whyItMatters}</p>
                   <p style={{ color: "#a8956e", lineHeight: 1.8, fontSize: "14px" }}>{generatedSermon.foreword?.relatable}</p>
                 </SermonSection>
 
-                {/* Teaching Points */}
                 <SermonSection id="s4" label="🔥 Core Teaching">
                   {generatedSermon.teachingPoints?.map((point, i) => (
                     <div key={i} style={{ marginBottom: i < generatedSermon.teachingPoints.length - 1 ? "24px" : 0, paddingBottom: i < generatedSermon.teachingPoints.length - 1 ? "24px" : 0, borderBottom: i < generatedSermon.teachingPoints.length - 1 ? "1px solid rgba(245,158,11,0.08)" : "none" }}>
@@ -280,7 +307,6 @@ export default function Dashboard() {
                   ))}
                 </SermonSection>
 
-                {/* Ministry Flow */}
                 <SermonSection id="s5" label="✨ Ministry Flow">
                   {[
                     { label: "Gift of Knowledge", text: generatedSermon.ministryFlow?.giftOfKnowledge },
@@ -296,7 +322,6 @@ export default function Dashboard() {
                   ))}
                 </SermonSection>
 
-                {/* Summary */}
                 <SermonSection id="s6" label="📋 Summary">
                   {generatedSermon.summary?.keyTakeaways?.map((t, i) => (
                     <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "10px" }}>
@@ -306,7 +331,6 @@ export default function Dashboard() {
                   ))}
                 </SermonSection>
 
-                {/* Altar Call */}
                 <SermonSection id="s7" label="🕊️ Altar Call">
                   <p style={{ color: "#fef3c7", lineHeight: 1.8, marginBottom: "16px", fontSize: "14px" }}>{generatedSermon.altarCall?.invitation}</p>
                   <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "8px", padding: "16px" }}>
@@ -315,7 +339,6 @@ export default function Dashboard() {
                   </div>
                 </SermonSection>
 
-                {/* Closing Prayer */}
                 <SermonSection id="s8" label="🙌 Closing Prayer">
                   <p className="font-serif" style={{ color: "#fef3c7", lineHeight: 1.9, fontSize: "16px", fontStyle: "italic" }}>{generatedSermon.closingPrayer}</p>
                 </SermonSection>
@@ -324,7 +347,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* LIBRARY TAB */}
+        {/* ── LIBRARY TAB ── */}
         {activeTab === "library" && (
           <div>
             <h2 className="font-serif" style={{ color: "#fef3c7", fontSize: "22px", marginBottom: "20px" }}>Sermon Library</h2>
@@ -341,11 +364,43 @@ export default function Dashboard() {
                 {sermons.map((s) => (
                   <div key={s.id} className="glass" style={{ padding: "18px", borderRadius: "12px" }}>
                     <h3 className="font-serif" style={{ color: "#fef3c7", fontSize: "17px", marginBottom: "4px" }}>{s.title}</h3>
-                    <p style={{ color: "#78716c", fontSize: "12px", marginBottom: "14px" }}>{s.tone} · {s.audience} · {new Date(s.created_at).toLocaleDateString()}</p>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <p style={{ color: "#78716c", fontSize: "12px", marginBottom: "8px" }}>{s.tone} · {s.audience} · {new Date(s.created_at).toLocaleDateString()}</p>
+
+                    {/* Series badge */}
+                    {s.series_id && (
+                      <p style={{ color: "#f59e0b", fontSize: "11px", marginBottom: "10px" }}>
+                        📚 {seriesList.find(sr => sr.id === s.series_id)?.name || "In a series"}
+                      </p>
+                    )}
+
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                       <button onClick={() => { setGeneratedSermon(s.content); setTopic(s.topic); setAudience(s.audience); setTone(s.tone); setActiveTab("generate"); }} className="btn-ghost" style={{ flex: 1, padding: "10px", borderRadius: "6px", fontSize: "13px" }}>Open</button>
+                      <button onClick={() => setAssigningSermon(assigningSermon === s.id ? null : s.id)} className="btn-ghost" style={{ flex: 1, padding: "10px", borderRadius: "6px", fontSize: "13px" }}>📚 Series</button>
                       <button onClick={() => deleteSermon(s.id)} style={{ flex: 1, padding: "10px", borderRadius: "6px", fontSize: "13px", background: "transparent", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", cursor: "pointer" }}>Delete</button>
                     </div>
+
+                    {/* Assign to series panel */}
+                    {assigningSermon === s.id && (
+                      <div style={{ marginTop: "12px", padding: "14px", background: "rgba(245,158,11,0.05)", borderRadius: "8px", border: "1px solid rgba(245,158,11,0.1)" }}>
+                        <p style={{ color: "#a8956e", fontSize: "12px", marginBottom: "10px" }}>Assign to a series:</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          {seriesList.length === 0 ? (
+                            <p style={{ color: "#57534e", fontSize: "13px" }}>No series yet — create one in the Series tab.</p>
+                          ) : (
+                            seriesList.map(sr => (
+                              <button key={sr.id} onClick={() => assignToSeries(s.id, sr.id)} style={{ padding: "10px 14px", borderRadius: "6px", fontSize: "13px", border: "1px solid", borderColor: s.series_id === sr.id ? "rgba(245,158,11,0.5)" : "rgba(245,158,11,0.15)", background: s.series_id === sr.id ? "rgba(245,158,11,0.1)" : "transparent", color: s.series_id === sr.id ? "#f59e0b" : "#a8956e", cursor: "pointer", textAlign: "left" as const }}>
+                                {s.series_id === sr.id ? "✓ " : ""}{sr.name}
+                              </button>
+                            ))
+                          )}
+                          {s.series_id && (
+                            <button onClick={() => assignToSeries(s.id, null)} style={{ padding: "10px 14px", borderRadius: "6px", fontSize: "13px", border: "1px solid rgba(239,68,68,0.2)", background: "transparent", color: "#f87171", cursor: "pointer", textAlign: "left" as const }}>
+                              Remove from series
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -353,13 +408,113 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* MENU TAB */}
+        {/* ── SERIES TAB ── */}
+        {activeTab === "series" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h2 className="font-serif" style={{ color: "#fef3c7", fontSize: "22px" }}>Sermon Series</h2>
+              <button onClick={() => setShowNewSeries(!showNewSeries)} className="btn-gold" style={{ padding: "10px 18px", borderRadius: "8px", fontSize: "13px" }}>
+                {showNewSeries ? "Cancel" : "+ New Series"}
+              </button>
+            </div>
+
+            {/* New series form */}
+            {showNewSeries && (
+              <div className="glass animate-slide-up" style={{ borderRadius: "12px", padding: "20px", marginBottom: "20px" }}>
+                <h3 className="font-serif" style={{ color: "#fef3c7", fontSize: "17px", marginBottom: "16px" }}>Create New Series</h3>
+                <label style={{ display: "block", color: "#a8956e", fontSize: "11px", letterSpacing: "1px", marginBottom: "8px", textTransform: "uppercase" as const }}>Series Name</label>
+                <input type="text" value={newSeriesName} onChange={(e) => setNewSeriesName(e.target.value)} placeholder="e.g. Walking by Faith, The Beatitudes..." style={{ width: "100%", padding: "12px 14px", fontSize: "15px", borderRadius: "8px", marginBottom: "12px" }} />
+                <label style={{ display: "block", color: "#a8956e", fontSize: "11px", letterSpacing: "1px", marginBottom: "8px", textTransform: "uppercase" as const }}>Description (optional)</label>
+                <textarea value={newSeriesDesc} onChange={(e) => setNewSeriesDesc(e.target.value)} placeholder="What is this series about?" rows={2} style={{ width: "100%", padding: "12px 14px", fontSize: "14px", borderRadius: "8px", marginBottom: "16px", resize: "none" as const }} />
+                <button onClick={createSeries} disabled={creatingSeries || !newSeriesName.trim()} className="btn-gold" style={{ width: "100%", padding: "13px", borderRadius: "8px", fontSize: "15px", opacity: creatingSeries || !newSeriesName.trim() ? 0.6 : 1, cursor: creatingSeries || !newSeriesName.trim() ? "not-allowed" : "pointer" }}>
+                  {creatingSeries ? "Creating..." : "Create Series"}
+                </button>
+              </div>
+            )}
+
+            {loadingSeries ? (
+              <div style={{ textAlign: "center", padding: "48px", color: "#57534e" }}>Loading...</div>
+            ) : seriesList.length === 0 ? (
+              <div className="glass" style={{ padding: "40px 20px", textAlign: "center", borderRadius: "12px" }}>
+                <div style={{ fontSize: "36px", marginBottom: "14px" }}>📚</div>
+                <p style={{ color: "#78716c", marginBottom: "8px" }}>No series yet.</p>
+                <p style={{ color: "#57534e", fontSize: "13px", marginBottom: "20px" }}>Create a series to group your sermons week by week.</p>
+                <button onClick={() => setShowNewSeries(true)} className="btn-gold" style={{ padding: "12px 24px", borderRadius: "8px", fontSize: "14px" }}>
+                  + Create First Series
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {seriesList.map((sr) => (
+                  <div key={sr.id} className="glass" style={{ borderRadius: "12px", overflow: "hidden" }}>
+                    {/* Series header */}
+                    <div
+                      onClick={() => setExpandedSeries(expandedSeries === sr.id ? null : sr.id)}
+                      style={{ padding: "18px 20px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    >
+                      <div>
+                        <h3 className="font-serif" style={{ color: "#fef3c7", fontSize: "18px", marginBottom: "4px" }}>{sr.name}</h3>
+                        {sr.description && <p style={{ color: "#78716c", fontSize: "13px", marginBottom: "4px" }}>{sr.description}</p>}
+                        <p style={{ color: "#f59e0b", fontSize: "12px" }}>{sr.sermons.length} sermon{sr.sermons.length !== 1 ? "s" : ""}</p>
+                      </div>
+                      <span style={{ color: "#78716c", fontSize: "18px" }}>{expandedSeries === sr.id ? "▲" : "▼"}</span>
+                    </div>
+
+                    {/* Expanded sermon list */}
+                    {expandedSeries === sr.id && (
+                      <div style={{ borderTop: "1px solid rgba(245,158,11,0.08)", padding: "12px 20px 20px" }}>
+                        {sr.sermons.length === 0 ? (
+                          <p style={{ color: "#57534e", fontSize: "13px", padding: "12px 0" }}>
+                            No sermons in this series yet. Go to Library → tap a sermon → Series to assign it here.
+                          </p>
+                        ) : (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "16px" }}>
+                            {sr.sermons.map((s, i) => (
+                              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", background: "rgba(245,158,11,0.04)", borderRadius: "8px", border: "1px solid rgba(245,158,11,0.08)" }}>
+                                <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                  <span style={{ color: "#f59e0b", fontSize: "12px", fontWeight: 600 }}>W{i + 1}</span>
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <p style={{ color: "#fef3c7", fontSize: "14px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.title}</p>
+                                  <p style={{ color: "#57534e", fontSize: "12px" }}>{s.tone} · {new Date(s.created_at!).toLocaleDateString()}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <button onClick={() => deleteSeries(sr.id)} style={{ padding: "10px 16px", borderRadius: "6px", fontSize: "13px", background: "transparent", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", cursor: "pointer" }}>
+                          Delete Series
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── MENU TAB ── */}
         {activeTab === "menu" && (
           <div>
             <h2 className="font-serif" style={{ color: "#fef3c7", fontSize: "22px", marginBottom: "24px" }}>Account</h2>
             <div className="glass" style={{ borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
               <p style={{ color: "#a8956e", fontSize: "12px", marginBottom: "4px" }}>Signed in as</p>
               <p style={{ color: "#fef3c7", fontSize: "15px" }}>{user.email}</p>
+            </div>
+            <div className="glass" style={{ borderRadius: "12px", padding: "20px", marginBottom: "16px" }}>
+              <p style={{ color: "#a8956e", fontSize: "12px", marginBottom: "8px" }}>Your Stats</p>
+              <div style={{ display: "flex", gap: "24px" }}>
+                <div>
+                  <p style={{ color: "#f59e0b", fontSize: "24px", fontWeight: 700 }}>{sermons.length}</p>
+                  <p style={{ color: "#78716c", fontSize: "12px" }}>Sermons</p>
+                </div>
+                <div>
+                  <p style={{ color: "#f59e0b", fontSize: "24px", fontWeight: 700 }}>{seriesList.length}</p>
+                  <p style={{ color: "#78716c", fontSize: "12px" }}>Series</p>
+                </div>
+              </div>
             </div>
             <button onClick={signOut} style={{ width: "100%", padding: "14px", borderRadius: "8px", fontSize: "15px", background: "transparent", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", cursor: "pointer" }}>
               Sign Out
@@ -368,23 +523,22 @@ export default function Dashboard() {
         )}
       </main>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Bottom Navigation — now with Series tab */}
       <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(15,10,5,0.97)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(245,158,11,0.1)", display: "flex", zIndex: 50 }}>
         {[
           { tab: "generate" as const, icon: "✦", label: "Build" },
-          { tab: "library" as const, icon: "📚", label: "Library" },
+          { tab: "library" as const, icon: "📖", label: "Library" },
+          { tab: "series" as const, icon: "📚", label: "Series" },
           { tab: "menu" as const, icon: "☰", label: "Menu" },
         ].map(({ tab, icon, label }) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: "12px 8px 10px", border: "none", background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
-            <span style={{ fontSize: "18px", filter: activeTab === tab ? "none" : "grayscale(1) opacity(0.4)" }}>{icon}</span>
-            <span style={{ fontSize: "11px", color: activeTab === tab ? "#f59e0b" : "#57534e", fontWeight: activeTab === tab ? 600 : 400 }}>{label}</span>
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: "12px 4px 10px", border: "none", background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+            <span style={{ fontSize: "16px", filter: activeTab === tab ? "none" : "grayscale(1) opacity(0.4)" }}>{icon}</span>
+            <span style={{ fontSize: "10px", color: activeTab === tab ? "#f59e0b" : "#57534e", fontWeight: activeTab === tab ? 600 : 400 }}>{label}</span>
           </button>
         ))}
       </nav>
 
-      <style>{`
-        @keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
-      `}</style>
+      <style>{`@keyframes pulse { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }`}</style>
     </div>
   );
 }
