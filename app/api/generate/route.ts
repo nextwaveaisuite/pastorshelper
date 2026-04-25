@@ -7,68 +7,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Topic is required" }, { status: 400 });
   }
 
-  const prompt = `You are a Spirit-led sermon builder. Create a sermon on "${topic}" for ${audience} in a ${tone} style.
+  const prompt = `Create a sermon on "${topic}" for ${audience} audience in ${tone} style.
 
-You MUST return ONLY raw JSON. No markdown. No code fences. No backticks. No explanation before or after. Start your response with { and end with }.
+Return ONLY a JSON object. Start with { and end with }. No markdown. No backticks. Keep each field to 1-2 sentences maximum.
 
-{
-  "title": "Sermon title here",
-  "alternativeTitles": ["Alt title 1", "Alt title 2"],
-  "anchorScripture": {
-    "reference": "Book Chapter:Verse",
-    "kjv": "KJV verse text here",
-    "nkjv": "NKJV verse text here"
-  },
-  "theme": "One sentence core theme",
-  "opening": {
-    "greeting": "Opening greeting to congregation",
-    "atmosphere": "Set the atmosphere",
-    "hook": "Relatable opening hook"
-  },
-  "foundation": {
-    "context": "Historical and spiritual context",
-    "breakdown": "Breakdown of the scripture"
-  },
-  "foreword": {
-    "whyItMatters": "Why this message matters",
-    "relatable": "Relatable story or illustration"
-  },
-  "teachingPoints": [
-    {
-      "title": "Point 1",
-      "scripture": "Scripture ref and text",
-      "explanation": "Explanation",
-      "application": "Application"
-    },
-    {
-      "title": "Point 2",
-      "scripture": "Scripture ref and text",
-      "explanation": "Explanation",
-      "application": "Application"
-    },
-    {
-      "title": "Point 3",
-      "scripture": "Scripture ref and text",
-      "explanation": "Explanation",
-      "application": "Application"
-    }
-  ],
-  "ministryFlow": {
-    "giftOfKnowledge": "Word of knowledge",
-    "impartation": "Impartation language",
-    "edification": "Words to build faith",
-    "slowDown": "Reflective pause",
-    "returnToAnchor": "Return to anchor scripture"
-  },
-  "summary": {
-    "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"]
-  },
-  "altarCall": {
-    "invitation": "Altar call invitation",
-    "prayer": "Guided prayer text"
-  },
-  "closingPrayer": "Closing blessing and prayer"
-}`;
+{"title":"short title","alternativeTitles":["alt1","alt2"],"anchorScripture":{"reference":"Book X:Y","kjv":"verse text","nkjv":"verse text"},"theme":"one sentence theme","opening":{"greeting":"1 sentence","atmosphere":"1 sentence","hook":"1 sentence"},"foundation":{"context":"1-2 sentences","breakdown":"1-2 sentences"},"foreword":{"whyItMatters":"1-2 sentences","relatable":"1-2 sentences"},"teachingPoints":[{"title":"point 1","scripture":"ref and text","explanation":"2 sentences","application":"1 sentence"},{"title":"point 2","scripture":"ref and text","explanation":"2 sentences","application":"1 sentence"},{"title":"point 3","scripture":"ref and text","explanation":"2 sentences","application":"1 sentence"}],"ministryFlow":{"giftOfKnowledge":"1 sentence","impartation":"1 sentence","edification":"1 sentence","slowDown":"1 sentence","returnToAnchor":"1 sentence"},"summary":{"keyTakeaways":["takeaway 1","takeaway 2","takeaway 3"]},"altarCall":{"invitation":"2 sentences","prayer":"2 sentences"},"closingPrayer":"1-2 sentences"}
+
+Fill in all fields with real Spirit-led content about "${topic}". Keep responses SHORT.`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -80,7 +25,7 @@ You MUST return ONLY raw JSON. No markdown. No code fences. No backticks. No exp
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 3000,
+        max_tokens: 1500,
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -88,35 +33,27 @@ You MUST return ONLY raw JSON. No markdown. No code fences. No backticks. No exp
     if (!response.ok) {
       const errText = await response.text();
       console.error("Anthropic API error:", response.status, errText);
-      return NextResponse.json(
-        { error: `API error ${response.status} — check your API key.` },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: `API error ${response.status}` }, { status: 500 });
     }
 
     const data = await response.json();
     const rawText: string = data.content?.[0]?.text || "";
 
-    console.log("Raw response length:", rawText.length);
-    console.log("Raw response start:", rawText.slice(0, 100));
+    console.log("Response length:", rawText.length);
+    console.log("Response start:", rawText.slice(0, 80));
 
-    // Aggressively clean the response
-    let cleaned = rawText
-      .replace(/^```json\s*/gi, "")
-      .replace(/^```\s*/gi, "")
-      .replace(/```\s*$/gi, "")
+    // Strip markdown fences
+    const cleaned = rawText
+      .replace(/```json\s*/gi, "")
+      .replace(/```\s*/gi, "")
       .trim();
 
-    // Extract JSON object
     const start = cleaned.indexOf("{");
     const end = cleaned.lastIndexOf("}");
 
-    if (start === -1 || end === -1 || end <= start) {
-      console.error("No valid JSON braces found. Raw text:", rawText.slice(0, 500));
-      return NextResponse.json(
-        { error: "Could not find sermon data in response. Please try again." },
-        { status: 500 }
-      );
+    if (start === -1 || end === -1) {
+      console.error("No JSON found:", rawText.slice(0, 300));
+      return NextResponse.json({ error: "No sermon data returned. Please try again." }, { status: 500 });
     }
 
     const jsonString = cleaned.slice(start, end + 1);
@@ -124,22 +61,15 @@ You MUST return ONLY raw JSON. No markdown. No code fences. No backticks. No exp
     let sermon;
     try {
       sermon = JSON.parse(jsonString);
-    } catch (parseErr) {
-      console.error("JSON parse failed:", parseErr);
-      console.error("JSON string attempted:", jsonString.slice(0, 500));
-      return NextResponse.json(
-        { error: "Sermon was generated but could not be read. Please try again." },
-        { status: 500 }
-      );
+    } catch (e) {
+      console.error("Parse error. String:", jsonString.slice(0, 400));
+      return NextResponse.json({ error: "Sermon generated but could not be read. Please try again." }, { status: 500 });
     }
 
     return NextResponse.json({ sermon });
 
   } catch (err) {
-    console.error("Generate route error:", err);
-    return NextResponse.json(
-      { error: "Server error. Please try again." },
-      { status: 500 }
-    );
+    console.error("Route error:", err);
+    return NextResponse.json({ error: "Server error. Please try again." }, { status: 500 });
   }
 }
