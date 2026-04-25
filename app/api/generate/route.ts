@@ -1,19 +1,31 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  const { topic, audience, tone } = await req.json();
+  const { topic, audience, tone, level } = await req.json();
 
   if (!topic) {
     return NextResponse.json({ error: "Topic is required" }, { status: 400 });
   }
 
-  const prompt = `Create a sermon on "${topic}" for ${audience} audience in ${tone} style.
+  const levelInstructions: Record<string, string> = {
+    beginner: `This sermon is for a BEGINNER level congregation or new pastor. Use simple, everyday language. Avoid complex theological terms. Focus on one clear idea per point. Use relatable real-life examples. Keep explanations short and encouraging. Assume the audience is new to the Bible.`,
+    intermediate: `This sermon is for an INTERMEDIATE level congregation. Use moderate theological depth. Include some original language insights (Greek/Hebrew simplified). Reference multiple scriptures. Explore the historical context. Challenge the audience to grow deeper in their walk. Assume the audience has some Bible knowledge.`,
+    advanced: `This sermon is for an ADVANCED level congregation or experienced minister. Use deep theological language freely. Dive into Greek/Hebrew word meanings. Cross-reference extensively across Old and New Testament. Include prophetic depth, doctrinal nuance, and challenging applications. Assume the audience is mature in faith and scripture.`,
+  };
 
-Return ONLY a JSON object. Start with { and end with }. No markdown. No backticks. Keep each field to 1-2 sentences maximum.
+  const levelText = levelInstructions[level || "beginner"];
 
-{"title":"short title","alternativeTitles":["alt1","alt2"],"anchorScripture":{"reference":"Book X:Y","kjv":"verse text","nkjv":"verse text"},"theme":"one sentence theme","opening":{"greeting":"1 sentence","atmosphere":"1 sentence","hook":"1 sentence"},"foundation":{"context":"1-2 sentences","breakdown":"1-2 sentences"},"foreword":{"whyItMatters":"1-2 sentences","relatable":"1-2 sentences"},"teachingPoints":[{"title":"point 1","scripture":"ref and text","explanation":"2 sentences","application":"1 sentence"},{"title":"point 2","scripture":"ref and text","explanation":"2 sentences","application":"1 sentence"},{"title":"point 3","scripture":"ref and text","explanation":"2 sentences","application":"1 sentence"}],"ministryFlow":{"giftOfKnowledge":"1 sentence","impartation":"1 sentence","edification":"1 sentence","slowDown":"1 sentence","returnToAnchor":"1 sentence"},"summary":{"keyTakeaways":["takeaway 1","takeaway 2","takeaway 3"]},"altarCall":{"invitation":"2 sentences","prayer":"2 sentences"},"closingPrayer":"1-2 sentences"}
+  const prompt = `You are a Spirit-led sermon builder. Create a sermon on "${topic}" for ${audience} audience in ${tone} style.
 
-Fill in all fields with real Spirit-led content about "${topic}". Keep responses SHORT.`;
+${levelText}
+
+IMPORTANT: Make this sermon completely UNIQUE with fresh revelation, original illustrations, and new angles on this topic. Never repeat generic content.
+
+Return ONLY a JSON object. Start with { and end with }. No markdown. No backticks. Keep each field to 1-3 sentences.
+
+{"title":"unique compelling title","alternativeTitles":["alt1","alt2"],"anchorScripture":{"reference":"Book X:Y","kjv":"verse text","nkjv":"verse text"},"theme":"one fresh unique sentence theme","opening":{"greeting":"1-2 sentences","atmosphere":"1 sentence","hook":"1-2 sentences compelling hook"},"foundation":{"context":"1-2 sentences context","breakdown":"1-2 sentences breakdown"},"foreword":{"whyItMatters":"1-2 sentences","relatable":"1-2 sentences story or illustration"},"teachingPoints":[{"title":"point 1 title","scripture":"ref and text","explanation":"2-3 sentences","application":"1-2 sentences"},{"title":"point 2 title","scripture":"ref and text","explanation":"2-3 sentences","application":"1-2 sentences"},{"title":"point 3 title","scripture":"ref and text","explanation":"2-3 sentences","application":"1-2 sentences"}],"ministryFlow":{"giftOfKnowledge":"1-2 sentences prophetic","impartation":"1-2 sentences activation","edification":"1-2 sentences encouragement","slowDown":"1-2 sentences reflective","returnToAnchor":"1-2 sentences full circle"},"summary":{"keyTakeaways":["takeaway 1","takeaway 2","takeaway 3"]},"altarCall":{"invitation":"2-3 sentences heartfelt","prayer":"2-3 sentences guided prayer"},"closingPrayer":"2 sentences blessing"}
+
+Fill with REAL Spirit-led content about "${topic}". Be specific, not generic. Level: ${level || "beginner"}.`;
 
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -25,7 +37,7 @@ Fill in all fields with real Spirit-led content about "${topic}". Keep responses
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1500,
+        max_tokens: 1800,
         messages: [{ role: "user", content: prompt }],
       }),
     });
@@ -42,7 +54,6 @@ Fill in all fields with real Spirit-led content about "${topic}". Keep responses
     console.log("Response length:", rawText.length);
     console.log("Response start:", rawText.slice(0, 80));
 
-    // Strip markdown fences
     const cleaned = rawText
       .replace(/```json\s*/gi, "")
       .replace(/```\s*/gi, "")
@@ -62,7 +73,7 @@ Fill in all fields with real Spirit-led content about "${topic}". Keep responses
     try {
       sermon = JSON.parse(jsonString);
     } catch (e) {
-      console.error("Parse error. String:", jsonString.slice(0, 400));
+      console.error("Parse error:", jsonString.slice(0, 400));
       return NextResponse.json({ error: "Sermon generated but could not be read. Please try again." }, { status: 500 });
     }
 
