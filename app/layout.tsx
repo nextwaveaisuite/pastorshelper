@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s | The Pastors Helper",
   },
   description:
-    "The Pastors Helper is a Spirit-led sermon building tool for pastors, ministers, and church leaders. Generate complete, Scripture-anchored sermons in seconds — with teaching points, ministry flow, altar calls, and preach mode. Available in 33 languages.",
+    "The Pastors Helper is a Spirit-led sermon building tool for pastors, ministers, and church leaders. Build complete, Scripture-anchored sermons in seconds — with teaching points, ministry flow, altar calls, and preach mode. Available in 33 languages.",
   keywords: [
     "sermon builder",
     "sermon generator",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     "sermon writing software",
     "church ministry tools",
     "sermon preparation",
-    "AI sermon builder",
+    "sermon builder app",
     "sermon outline generator",
     "pastor sermon helper",
     "sermon series builder",
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     canonical: "https://thepastorshelper.com",
   },
   verification: {
-    google: "VLL5j4c-dDjxxAJGOIIjqzbOIGyp2d1l-RZVsfTaQaY",
+    google: "add-your-google-search-console-verification-code-here",
   },
   icons: {
     icon: "/favicon.ico",
