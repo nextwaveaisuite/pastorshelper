@@ -55,7 +55,9 @@ export default function Dashboard() {
     setGenerating(true); setError(""); setGeneratedSermon(null); setSaveSuccess(false);
     try {
       const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ topic, audience, tone }) });
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { throw new Error("Server error — make sure ANTHROPIC_API_KEY is set in Netlify environment variables."); }
       if (data.error) throw new Error(data.error);
       setGeneratedSermon(data.sermon);
       setActiveTab("generate");
