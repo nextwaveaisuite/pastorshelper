@@ -277,64 +277,105 @@ export default function Dashboard() {
 
                 {/* Card: Topic */}
                 <div className="glass" style={{ borderRadius: "14px", padding: "20px" }}>
-                  <Label>Topic or Scripture</Label>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <input
-                      type="text"
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && generateSermon()}
-                      placeholder="e.g. Faith, John 3:16, Healing..."
-                      style={{ flex: 1, padding: "12px 14px", fontSize: "15px", borderRadius: "8px" }}
-                    />
-                    <button
-                      onClick={() => { setShowTopics(!showTopics); setShowLangPicker(false); }}
-                      title="Browse topics"
-                      style={{ width: "46px", height: "46px", borderRadius: "8px", border: "1px solid", borderColor: showTopics ? "rgba(245,158,11,0.5)" : "rgba(245,158,11,0.15)", background: showTopics ? "rgba(245,158,11,0.1)" : "transparent", cursor: "pointer", fontSize: "18px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                    >
-                      📚
-                    </button>
+
+                  {/* Step indicator */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                    <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ color: "#f59e0b", fontSize: "11px", fontWeight: 700 }}>1</span>
+                    </div>
+                    <div>
+                      <p style={{ color: "#fef3c7", fontSize: "14px", fontWeight: 600 }}>What is your sermon about?</p>
+                      <p style={{ color: "#57534e", fontSize: "11px", marginTop: "1px" }}>Type your own topic, or browse our library below</p>
+                    </div>
                   </div>
+
+                  {/* Input row */}
+                  <input
+                    type="text"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && generateSermon()}
+                    placeholder="e.g. Faith, Healing, John 3:16, Grace..."
+                    style={{ width: "100%", padding: "13px 14px", fontSize: "15px", borderRadius: "8px", marginBottom: "12px" }}
+                  />
+
+                  {/* Browse toggle */}
+                  <button
+                    onClick={() => { setShowTopics(!showTopics); setShowLangPicker(false); setSelectedCategory(null); }}
+                    style={{ width: "100%", padding: "11px 16px", borderRadius: "8px", border: "1px solid", borderColor: showTopics ? "rgba(245,158,11,0.4)" : "rgba(245,158,11,0.12)", background: showTopics ? "rgba(245,158,11,0.07)" : "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ fontSize: "15px" }}>📚</span>
+                      <span style={{ color: showTopics ? "#f59e0b" : "#a8956e", fontSize: "13px", fontWeight: 500 }}>
+                        Browse 300+ sermon topics
+                      </span>
+                    </div>
+                    <span style={{ color: "#57534e", fontSize: "11px" }}>{showTopics ? "▲ Close" : "▼ Open"}</span>
+                  </button>
 
                   {/* Topic Browser Panel */}
                   {showTopics && (
-                    <div style={{ marginTop: "12px", border: "1px solid rgba(245,158,11,0.1)", borderRadius: "10px", overflow: "hidden" }}>
-                      {/* Random suggestions */}
-                      <div style={{ padding: "14px", background: "rgba(245,158,11,0.03)", borderBottom: "1px solid rgba(245,158,11,0.08)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                          <span style={{ color: "#f59e0b", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" as const, fontWeight: 600 }}>Random Suggestions</span>
-                          <button onClick={() => setRandomTopics(getRandomTopics(12))} style={{ background: "none", border: "none", color: "#57534e", cursor: "pointer", fontSize: "12px" }}>↺ Shuffle</button>
-                        </div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                          {randomTopics.map((t) => (
-                            <button key={t} onClick={() => { setTopic(t); setShowTopics(false); }} style={{ padding: "5px 10px", borderRadius: "16px", fontSize: "11px", border: "1px solid rgba(245,158,11,0.12)", background: "transparent", color: "#a8956e", cursor: "pointer" }}>
-                              {t.length > 36 ? t.slice(0, 34) + "…" : t}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                    <div style={{ marginTop: "10px", border: "1px solid rgba(245,158,11,0.1)", borderRadius: "10px", overflow: "hidden" }}>
 
-                      {/* Category tabs */}
-                      <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(245,158,11,0.08)", overflowX: "auto" }}>
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                          {TOPIC_CATEGORIES.map((cat) => (
-                            <button key={cat.name} onClick={() => setSelectedCategory(selectedCategory === cat.name ? null : cat.name)} style={{ padding: "5px 11px", borderRadius: "16px", fontSize: "11px", border: "1px solid", borderColor: selectedCategory === cat.name ? cat.color : "rgba(245,158,11,0.1)", background: selectedCategory === cat.name ? `${cat.color}18` : "transparent", color: selectedCategory === cat.name ? cat.color : "#78716c", cursor: "pointer", whiteSpace: "nowrap" }}>
-                              {cat.icon} {cat.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      {/* Mode tabs */}
+                      {!selectedCategory ? (
+                        <>
+                          {/* Random suggestions */}
+                          <div style={{ padding: "14px", background: "rgba(245,158,11,0.02)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                              <p style={{ color: "#f59e0b", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" as const, fontWeight: 600 }}>✦ Quick Picks — tap one to use it</p>
+                              <button onClick={() => setRandomTopics(getRandomTopics(12))} style={{ background: "none", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "12px", color: "#78716c", cursor: "pointer", fontSize: "11px", padding: "3px 10px" }}>↺ Shuffle</button>
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                              {randomTopics.map((t) => (
+                                <button key={t} onClick={() => { setTopic(t); setShowTopics(false); }} style={{ padding: "6px 11px", borderRadius: "16px", fontSize: "12px", border: "1px solid rgba(245,158,11,0.14)", background: "transparent", color: "#a8956e", cursor: "pointer" }}>
+                                  {t.length > 38 ? t.slice(0, 36) + "…" : t}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
 
-                      {/* Category topics */}
-                      {selectedCategory && (
-                        <div style={{ maxHeight: "200px", overflowY: "auto", padding: "8px" }}>
-                          {TOPIC_CATEGORIES.find(c => c.name === selectedCategory)?.topics.map((t) => (
-                            <button key={t} onClick={() => { setTopic(t); setShowTopics(false); setSelectedCategory(null); }} style={{ display: "block", width: "100%", padding: "9px 12px", marginBottom: "2px", borderRadius: "6px", fontSize: "13px", border: "none", background: topic === t ? "rgba(245,158,11,0.08)" : "transparent", color: topic === t ? "#f59e0b" : "#a8956e", cursor: "pointer", textAlign: "left" as const }}>
-                              {t}
+                          {/* Divider */}
+                          <div style={{ borderTop: "1px solid rgba(245,158,11,0.07)", padding: "12px 14px" }}>
+                            <p style={{ color: "#f59e0b", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" as const, fontWeight: 600, marginBottom: "10px" }}>Browse by Category</p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                              {TOPIC_CATEGORIES.map((cat) => (
+                                <button key={cat.name} onClick={() => setSelectedCategory(cat.name)} style={{ padding: "7px 13px", borderRadius: "18px", fontSize: "12px", border: "1px solid rgba(245,158,11,0.12)", background: "transparent", color: "#78716c", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px" }}>
+                                  <span>{cat.icon}</span>
+                                  <span>{cat.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        /* Category drill-down */
+                        <div>
+                          <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(245,158,11,0.07)", display: "flex", alignItems: "center", gap: "10px" }}>
+                            <button onClick={() => setSelectedCategory(null)} style={{ background: "none", border: "none", color: "#f59e0b", cursor: "pointer", fontSize: "13px", padding: 0, display: "flex", alignItems: "center", gap: "5px" }}>
+                              ← Back
                             </button>
-                          ))}
+                            <span style={{ color: "#57534e", fontSize: "12px" }}>
+                              {TOPIC_CATEGORIES.find(c => c.name === selectedCategory)?.icon} {selectedCategory}
+                            </span>
+                          </div>
+                          <div style={{ maxHeight: "240px", overflowY: "auto", padding: "8px" }}>
+                            {TOPIC_CATEGORIES.find(c => c.name === selectedCategory)?.topics.map((t) => (
+                              <button key={t} onClick={() => { setTopic(t); setShowTopics(false); setSelectedCategory(null); }} style={{ display: "block", width: "100%", padding: "10px 12px", marginBottom: "2px", borderRadius: "7px", fontSize: "13px", border: "none", background: topic === t ? "rgba(245,158,11,0.08)" : "transparent", color: topic === t ? "#f59e0b" : "#a8956e", cursor: "pointer", textAlign: "left" as const }}>
+                                {t}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Confirmation of selected topic */}
+                  {topic && (
+                    <div style={{ marginTop: "12px", padding: "10px 14px", borderRadius: "8px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                      <p style={{ color: "#fbbf24", fontSize: "13px", flex: 1 }}>✓ {topic}</p>
+                      <button onClick={() => setTopic("")} style={{ background: "none", border: "none", color: "#57534e", cursor: "pointer", fontSize: "12px", flexShrink: 0 }}>✕ Clear</button>
                     </div>
                   )}
                 </div>
