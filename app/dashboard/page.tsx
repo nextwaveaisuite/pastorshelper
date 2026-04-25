@@ -40,6 +40,11 @@ const LANGUAGES = [
   { code: "Ukrainian", label: "Українська", flag: "🇺🇦" },
   { code: "Romanian", label: "Română", flag: "🇷🇴" },
   { code: "Polish", label: "Polski", flag: "🇵🇱" },
+  { code: "Samoan", label: "Gagana Samoa", flag: "🇼🇸" },
+  { code: "Fijian", label: "Vosa Vakaviti", flag: "🇫🇯" },
+  { code: "Tok Pisin", label: "Tok Pisin (PNG)", flag: "🇵🇬" },
+  { code: "Maori", label: "Te Reo Māori", flag: "🇳🇿" },
+  { code: "Tongan", label: "Lea Faka-Tonga", flag: "🇹🇴" },
 ];
 
 const LEVELS = [
