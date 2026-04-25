@@ -24,7 +24,7 @@ LANGUAGE: Write the ENTIRE sermon content in ${targetLanguage}. Every word of th
 
 IMPORTANT: Make this sermon completely UNIQUE with fresh revelation, original illustrations, and new angles. Never use generic content.
 
-Return ONLY a JSON object. Start with { and end with }. No markdown. No backticks. Keep each field to 1-3 sentences.
+Return ONLY a JSON object. Start with { and end with }. No markdown. No backticks. Keep each field to 2-3 sentences maximum — be rich but concise.
 
 {"title":"title in ${targetLanguage}","alternativeTitles":["alt1","alt2"],"anchorScripture":{"reference":"Book X:Y","kjv":"KJV verse in English","nkjv":"NKJV verse in English"},"theme":"theme in ${targetLanguage}","opening":{"greeting":"greeting in ${targetLanguage}","atmosphere":"1 sentence in ${targetLanguage}","hook":"hook in ${targetLanguage}"},"foundation":{"context":"context in ${targetLanguage}","breakdown":"breakdown in ${targetLanguage}"},"foreword":{"whyItMatters":"in ${targetLanguage}","relatable":"story in ${targetLanguage}"},"teachingPoints":[{"title":"point 1 in ${targetLanguage}","scripture":"ref and English text","explanation":"in ${targetLanguage}","application":"in ${targetLanguage}"},{"title":"point 2 in ${targetLanguage}","scripture":"ref and English text","explanation":"in ${targetLanguage}","application":"in ${targetLanguage}"},{"title":"point 3 in ${targetLanguage}","scripture":"ref and English text","explanation":"in ${targetLanguage}","application":"in ${targetLanguage}"}],"ministryFlow":{"giftOfKnowledge":"in ${targetLanguage}","impartation":"in ${targetLanguage}","edification":"in ${targetLanguage}","slowDown":"in ${targetLanguage}","returnToAnchor":"in ${targetLanguage}"},"summary":{"keyTakeaways":["in ${targetLanguage}","in ${targetLanguage}","in ${targetLanguage}"]},"altarCall":{"invitation":"in ${targetLanguage}","prayer":"in ${targetLanguage}"},"closingPrayer":"in ${targetLanguage}"}
 
@@ -40,7 +40,7 @@ Scripture references stay in their standard English format (e.g. John 3:16) but 
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1800,
+        max_tokens: level === "advanced" ? 2800 : level === "intermediate" ? 2200 : 1800,
         messages: [{ role: "user", content: prompt }],
       }),
     });
