@@ -14,6 +14,18 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    // Hardcoded unlimited for owner
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("email")
+      .eq("id", user_id)
+      .single();
+
+    if (profile?.email === "chnomg@gmail.com") {
+      await supabase.from("user_credits").upsert({ user_id, unlimited: true, balance: 99999 });
+      return NextResponse.json({ credits: { balance: 99999, total_purchased: 0, total_used: 0, is_free_tier: false, unlimited: true } });
+    }
+
     // Get or create credit record
     let { data: credits, error } = await supabase
       .from("user_credits")
