@@ -8,6 +8,8 @@ import { TOPIC_CATEGORIES, getRandomTopics } from "@/lib/topics";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const ADMIN_EMAIL = "chnomg@gmail.com";
+
 const AUDIENCES = ["General Congregation", "Youth", "Outreach / Evangelism", "Men's Ministry", "Women's Ministry", "Leaders"];
 const TONES = ["Teaching", "Prophetic", "Evangelistic", "Pastoral", "Conviction"];
 
@@ -18,39 +20,49 @@ const LEVELS = [
 ];
 
 const LANGUAGES = [
-  { code: "English",            label: "English",            flag: "🇬🇧" },
-  { code: "Spanish",            label: "Español",            flag: "🇪🇸" },
-  { code: "French",             label: "Français",           flag: "🇫🇷" },
-  { code: "Portuguese",         label: "Português",          flag: "🇧🇷" },
-  { code: "German",             label: "Deutsch",            flag: "🇩🇪" },
-  { code: "Italian",            label: "Italiano",           flag: "🇮🇹" },
-  { code: "Dutch",              label: "Nederlands",         flag: "🇳🇱" },
-  { code: "Afrikaans",          label: "Afrikaans",          flag: "🇿🇦" },
-  { code: "Zulu",               label: "IsiZulu",            flag: "🇿🇦" },
-  { code: "Swahili",            label: "Kiswahili",          flag: "🇰🇪" },
-  { code: "Yoruba",             label: "Yorùbá",             flag: "🇳🇬" },
-  { code: "Igbo",               label: "Igbo",               flag: "🇳🇬" },
-  { code: "Hausa",              label: "Hausa",              flag: "🇳🇬" },
-  { code: "Amharic",            label: "Amharic",            flag: "🇪🇹" },
-  { code: "Arabic",             label: "Arabic",             flag: "🇸🇦" },
-  { code: "Hindi",              label: "Hindi",              flag: "🇮🇳" },
-  { code: "Tamil",              label: "Tamil",              flag: "🇮🇳" },
-  { code: "Telugu",             label: "Telugu",             flag: "🇮🇳" },
-  { code: "Tagalog",            label: "Filipino",           flag: "🇵🇭" },
-  { code: "Indonesian",         label: "Bahasa Indonesia",   flag: "🇮🇩" },
-  { code: "Malay",              label: "Bahasa Melayu",      flag: "🇲🇾" },
-  { code: "Mandarin Chinese",   label: "中文",               flag: "🇨🇳" },
-  { code: "Korean",             label: "한국어",              flag: "🇰🇷" },
-  { code: "Japanese",           label: "日本語",              flag: "🇯🇵" },
-  { code: "Russian",            label: "Русский",            flag: "🇷🇺" },
-  { code: "Ukrainian",          label: "Українська",         flag: "🇺🇦" },
-  { code: "Romanian",           label: "Română",             flag: "🇷🇴" },
-  { code: "Polish",             label: "Polski",             flag: "🇵🇱" },
-  { code: "Samoan",             label: "Gagana Samoa",       flag: "🇼🇸" },
-  { code: "Fijian",             label: "Vosa Vakaviti",      flag: "🇫🇯" },
-  { code: "Tok Pisin",          label: "Tok Pisin (PNG)",    flag: "🇵🇬" },
-  { code: "Maori",              label: "Te Reo Māori",       flag: "🇳🇿" },
-  { code: "Tongan",             label: "Lea Faka-Tonga",     flag: "🇹🇴" },
+  { code: "English",          label: "English",          flag: "🇬🇧" },
+  { code: "Spanish",          label: "Español",         flag: "🇪🇸" },
+  { code: "French",           label: "Français",        flag: "🇫🇷" },
+  { code: "Portuguese",       label: "Português",       flag: "🇧🇷" },
+  { code: "German",           label: "Deutsch",          flag: "🇩🇪" },
+  { code: "Italian",          label: "Italiano",         flag: "🇮🇹" },
+  { code: "Dutch",            label: "Nederlands",       flag: "🇳🇱" },
+  { code: "Afrikaans",        label: "Afrikaans",        flag: "🇿🇦" },
+  { code: "Zulu",             label: "IsiZulu",          flag: "🇿🇦" },
+  { code: "Swahili",          label: "Kiswahili",        flag: "🇰🇪" },
+  { code: "Yoruba",           label: "Yorùbá",         flag: "🇳🇬" },
+  { code: "Igbo",             label: "Igbo",             flag: "🇳🇬" },
+  { code: "Hausa",            label: "Hausa",            flag: "🇳🇬" },
+  { code: "Amharic",          label: "Amharic",          flag: "🇪🇹" },
+  { code: "Arabic",           label: "Arabic",           flag: "🇸🇦" },
+  { code: "Hindi",            label: "Hindi",            flag: "🇮🇳" },
+  { code: "Tamil",            label: "Tamil",            flag: "🇮🇳" },
+  { code: "Telugu",           label: "Telugu",           flag: "🇮🇳" },
+  { code: "Tagalog",          label: "Filipino",         flag: "🇵🇭" },
+  { code: "Indonesian",       label: "Bahasa Indonesia", flag: "🇮🇩" },
+  { code: "Malay",            label: "Bahasa Melayu",    flag: "🇲🇾" },
+  { code: "Mandarin Chinese", label: "中文",             flag: "🇨🇳" },
+  { code: "Korean",           label: "한국어",            flag: "🇰🇷" },
+  { code: "Japanese",         label: "日本語",            flag: "🇯🇵" },
+  { code: "Russian",          label: "Русский",          flag: "🇷🇺" },
+  { code: "Ukrainian",        label: "Українська",       flag: "🇺🇦" },
+  { code: "Romanian",         label: "Română",          flag: "🇷🇴" },
+  { code: "Polish",           label: "Polski",           flag: "🇵🇱" },
+  { code: "Samoan",           label: "Gagana Samoa",     flag: "🇼🇸" },
+  { code: "Fijian",           label: "Vosa Vakaviti",    flag: "🇫🇯" },
+  { code: "Tok Pisin",        label: "Tok Pisin (PNG)",  flag: "🇵🇬" },
+  { code: "Maori",            label: "Te Reo Māori",    flag: "🇳🇿" },
+  { code: "Tongan",           label: "Lea Faka-Tonga",   flag: "🇹🇴" },
+  { code: "Bislama",          label: "Bislama (Vanuatu)", flag: "🇻🇺" },
+  { code: "Tok Pisin",        label: "South Sea Islander", flag: "🌊" },
+  { code: "Pacific Islander English", label: "Pacific Islander", flag: "🌴" },
+];
+
+// First Nations — Admin only
+const FIRST_NATIONS_LANGUAGES = [
+  { code: "Pitjantjatjara",   label: "Pitjantjatjara",   flag: "🇦🇺", desc: "South Australia / NT" },
+  { code: "Kriol",            label: "Kriol",             flag: "🇦🇺", desc: "Northern Australia Creole" },
+  { code: "Aboriginal English", label: "Aboriginal English", flag: "🇦🇺", desc: "Across Australia" },
 ];
 
 type SeriesWithSermons = Series & { sermons: Partial<Sermon>[] };
@@ -84,6 +96,7 @@ export default function Dashboard() {
   const [tone, setTone] = useState("Teaching");
   const [level, setLevel] = useState("beginner");
   const [language, setLanguage] = useState("English");
+  const [email, setEmail] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generatedSermon, setGeneratedSermon] = useState<Sermon["content"] | null>(null);
   const [saving, setSaving] = useState(false);
@@ -123,10 +136,13 @@ export default function Dashboard() {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) { router.replace("/login"); return; }
       setUser(data.session.user);
+      setEmail(data.session.user.email || "");
       loadSermons(data.session.user.id);
       loadSeries(data.session.user.id);
     });
     setRandomTopics(getRandomTopics(12));
+    // Track page view
+    fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ page: "/dashboard" }) }).catch(() => {});
   }, [router, loadSermons, loadSeries]);
 
   const selectedLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
@@ -444,6 +460,29 @@ export default function Dashboard() {
                   )}
                 </div>
 
+                {/* First Nations Ministry — Admin Only */}
+                {email === ADMIN_EMAIL && (
+                  <div style={{ marginTop: "12px", padding: "14px 16px", borderRadius: "10px", background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                      <span style={{ fontSize: "16px" }}>🪃</span>
+                      <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, fontWeight: 600 }}>First Nations Ministry</p>
+                      <span style={{ padding: "2px 8px", borderRadius: "10px", background: "rgba(139,92,246,0.15)", color: "#a78bfa", fontSize: "10px" }}>Admin Only</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {FIRST_NATIONS_LANGUAGES.map((l) => (
+                        <button key={l.code} onClick={() => setLanguage(l.code)} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "8px", border: "1px solid", borderColor: language === l.code ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.12)", background: language === l.code ? "rgba(139,92,246,0.1)" : "transparent", cursor: "pointer", textAlign: "left" as const }}>
+                          <span style={{ fontSize: "18px" }}>{l.flag}</span>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ color: language === l.code ? "#a78bfa" : "#fef3c7", fontSize: "13px", fontWeight: 500 }}>{l.label}</p>
+                            <p style={{ color: "#57534e", fontSize: "11px" }}>{l.desc}</p>
+                          </div>
+                          {language === l.code && <span style={{ color: "#a78bfa", fontSize: "12px" }}>✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Error */}
                 {error && (
                   <div style={{ padding: "12px 16px", borderRadius: "10px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
@@ -714,6 +753,11 @@ export default function Dashboard() {
                 <div><p style={{ color: "#f59e0b", fontSize: "28px", fontWeight: 700 }}>{seriesList.length}</p><p style={{ color: "#57534e", fontSize: "12px" }}>Series</p></div>
               </div>
             </div>
+            {email === ADMIN_EMAIL && (
+              <a href="/admin" style={{ display: "block", width: "100%", padding: "13px", borderRadius: "10px", fontSize: "14px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", cursor: "pointer", textAlign: "center" as const, textDecoration: "none", marginBottom: "12px" }}>
+                ⚙️ Admin Console
+              </a>
+            )}
             <button onClick={signOut} style={{ width: "100%", padding: "13px", borderRadius: "10px", fontSize: "14px", background: "transparent", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", cursor: "pointer" }}>Sign Out</button>
           </div>
         )}
