@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     "sermon topics",
     "Bible sermon builder",
     "Spirit-led preaching",
-    "evangelical sermon tool",
+    "evangelistic sermon tool",
     "sermon writing app",
     "free sermon builder",
     "sermon generator for pastors",
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     canonical: "https://thepastorshelper.com",
   },
   verification: {
-    google: "VLL5j4c-dDjxxAJGOIIjqzbOIGyp2d1l-RZVsfTaQaY",
+    google: "add-your-google-search-console-verification-code-here",
   },
   icons: {
     icon: "/favicon.ico",
