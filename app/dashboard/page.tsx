@@ -11,7 +11,7 @@ import Link from "next/link";
 const ADMIN_EMAIL = "chnomg@gmail.com";
 
 const AUDIENCES = ["General Congregation", "Youth", "Outreach / Evangelism", "Men's Ministry", "Women's Ministry", "Leaders"];
-const TONES = ["Teaching", "Prophetic", "Evangelistic", "Pastoral", "Conviction"];
+const TONES = ["Teaching", "Evangelistic", "Pastoral", "General Prayer", "Warfare"];
 
 const LEVELS = [
   { key: "beginner",     label: "Beginner",     desc: "Simple language for new believers",          color: "#10b981", icon: "🌱" },
