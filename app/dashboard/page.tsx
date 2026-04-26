@@ -135,19 +135,55 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) { router.replace("/login"); return; }
-      setUser(data.session.user);
-      setEmail(data.session.user.email || "");
-      loadSermons(data.session.user.id);
-      loadSeries(data.session.user.id);
-    });
     setRandomTopics(getRandomTopics(12));
-    // Load credits
-    fetch("/api/credits/balance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: data.session.user.id }) })
-      .then(r => r.json()).then(d => { if (d.credits) { setCreditBalance(d.credits.balance); setLowCredits(d.credits.balance < 3); } });
-    // Track page view
-    fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ page: "/dashboard" }) }).catch(() => {});
+
+    const initSession = async () => {
+      // Wait briefly for magic link token to be processed
+      await new Promise(r => setTimeout(r, 500));
+
+      let { data } = await supabase.auth.getSession();
+
+      // If no session yet, wait a bit longer (magic link redirect)
+      if (!data.session) {
+        await new Promise(r => setTimeout(r, 1200));
+        const retry = await supabase.auth.getSession();
+        data = retry.data;
+      }
+
+      if (!data.session) {
+        router.replace("/login");
+        return;
+      }
+
+      const u = data.session.user;
+      setUser(u);
+      setEmail(u.email || "");
+      loadSermons(u.id);
+      loadSeries(u.id);
+
+      // Load credits — wrapped in try/catch so it never crashes the page
+      try {
+        const r = await fetch("/api/credits/balance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: u.id }),
+        });
+        const d = await r.json();
+        if (d.credits) {
+          setCreditBalance(d.credits.balance);
+          setLowCredits(d.credits.balance < 3);
+        }
+      } catch { /* non-fatal */ }
+
+      // Track page view — non-fatal
+      fetch("/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ page: "/dashboard" }),
+      }).catch(() => {});
+    };
+
+    initSession();
   }, [router, loadSermons, loadSeries]);
 
   const selectedLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
