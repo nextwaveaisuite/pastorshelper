@@ -239,6 +239,18 @@ export default function AdminPage() {
                       {u.ban_reason && <p style={{ color: "#f87171", fontSize: "12px", marginTop: "4px" }}>Reason: {u.ban_reason}</p>}
                     </div>
 
+                    {/* Credit top-up */}
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <input type="number" placeholder="Credits" min="1" max="500" id={`credits-${u.id}`} style={{ width: "80px", padding: "6px 8px", borderRadius: "6px", fontSize: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(245,158,11,0.15)", color: "#fef3c7" }} />
+                      <button onClick={async () => {
+                        const input = document.getElementById(`credits-${u.id}`) as HTMLInputElement;
+                        const amount = parseInt(input.value);
+                        if (!amount || amount < 1) return;
+                        await fetch("/api/credits/topup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ requester_email: email, user_id: u.id, amount, reason: "Admin top-up" }) });
+                        input.value = "";
+                        alert(`Added ${amount} credits`);
+                      }} style={{ padding: "6px 12px", borderRadius: "6px", fontSize: "12px", background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.25)", color: "#4ade80", cursor: "pointer" }}>+ Credits</button>
+                    </div>
                     {u.email !== ADMIN_EMAIL && (
                       <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                         {u.is_banned ? (
