@@ -1,18 +1,24 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-// Lazy singleton — only created on first call, never at module load time
 let _client: SupabaseClient | null = null;
 
 function getClient(): SupabaseClient {
   if (!_client) {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    _client = createClient(url, key);
+    _client = createClient(url, key, {
+      auth: {
+        persistSession: true,
+        storageKey: "pastors-helper-auth",
+        storage: typeof window !== "undefined" ? window.localStorage : undefined,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
   }
   return _client;
 }
 
-// Proxy object — safe to import anywhere, only initialises at runtime
 export const supabase = {
   auth: {
     getSession: () => getClient().auth.getSession(),
