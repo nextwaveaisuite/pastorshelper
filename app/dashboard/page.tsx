@@ -466,7 +466,7 @@ export default function Dashboard() {
                     <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
                       <span style={{ fontSize: "16px" }}>🪃</span>
                       <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, fontWeight: 600 }}>First Nations Ministry</p>
-                      <span style={{ padding: "2px 8px", borderRadius: "10px", background: "rgba(139,92,246,0.15)", color: "#a78bfa", fontSize: "10px" }}>Admin Only</span>
+                      <span style={{ padding: "2px 8px", borderRadius: "10px", background: "rgba(139,92,246,0.15)", color: "#a78bfa", fontSize: "10px" }}>🔒 LOCKED</span>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       {FIRST_NATIONS_LANGUAGES.map((l) => (
