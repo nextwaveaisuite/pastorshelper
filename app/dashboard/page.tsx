@@ -97,6 +97,8 @@ export default function Dashboard() {
   const [level, setLevel] = useState("beginner");
   const [language, setLanguage] = useState("English");
   const [email, setEmail] = useState("");
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
+  const [lowCredits, setLowCredits] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [generatedSermon, setGeneratedSermon] = useState<Sermon["content"] | null>(null);
   const [saving, setSaving] = useState(false);
@@ -141,6 +143,9 @@ export default function Dashboard() {
       loadSeries(data.session.user.id);
     });
     setRandomTopics(getRandomTopics(12));
+    // Load credits
+    fetch("/api/credits/balance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: data.session.user.id }) })
+      .then(r => r.json()).then(d => { if (d.credits) { setCreditBalance(d.credits.balance); setLowCredits(d.credits.balance < 3); } });
     // Track page view
     fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ page: "/dashboard" }) }).catch(() => {});
   }, [router, loadSermons, loadSeries]);
@@ -152,6 +157,15 @@ export default function Dashboard() {
     setGenerating(true); setError(""); setGeneratedSermon(null); setSaveSuccess(false);
     setShowTopics(false); setShowLangPicker(false);
     try {
+      // Deduct credits first
+      const creditCost = level === "advanced" ? 3 : level === "intermediate" ? 2 : 1;
+      const deductRes = await fetch("/api/credits/deduct", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user?.id, level, topic }) });
+      const deductData = await deductRes.json();
+      if (deductRes.status === 402) {
+        throw new Error(`Not enough credits. You need ${deductData.cost} credit${deductData.cost > 1 ? "s" : ""} but have ${deductData.balance}. Top up at the Credits page.`);
+      }
+      if (deductData.new_balance !== undefined) setCreditBalance(deductData.new_balance);
+
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -279,7 +293,15 @@ export default function Dashboard() {
             <span style={{ fontSize: "16px" }}>✝</span>
             <span className="font-serif" style={{ color: "#f59e0b", fontSize: "15px", fontWeight: 600 }}>The Pastors Helper</span>
           </Link>
-          <span style={{ color: "#57534e", fontSize: "11px", maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {creditBalance !== null && (
+            <a href="/credits" style={{ display: "flex", alignItems: "center", gap: "6px", textDecoration: "none", padding: "4px 10px", borderRadius: "16px", background: lowCredits ? "rgba(239,68,68,0.1)" : "rgba(245,158,11,0.08)", border: `1px solid ${lowCredits ? "rgba(239,68,68,0.3)" : "rgba(245,158,11,0.15)"}` }}>
+              <span style={{ color: lowCredits ? "#f87171" : "#f59e0b", fontSize: "13px", fontWeight: 700 }}>{creditBalance}</span>
+              <span style={{ color: lowCredits ? "#f87171" : "#a8956e", fontSize: "11px" }}>credits</span>
+            </a>
+          )}
+          <span style={{ color: "#57534e", fontSize: "11px", maxWidth: "130px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</span>
+        </div>
         </div>
       </header>
 
@@ -461,7 +483,10 @@ export default function Dashboard() {
                 </div>
 
                 {/* First Nations Ministry — Admin Only */}
-                {email === ADMIN_EMAIL && (
+                <a href="/credits" style={{ display: "block", width: "100%", padding: "13px", borderRadius: "10px", fontSize: "14px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", color: "#f59e0b", cursor: "pointer", textAlign: "center" as const, textDecoration: "none", marginBottom: "12px" }}>
+              💳 Credits — {creditBalance !== null ? `${creditBalance} remaining` : "Top Up"}
+            </a>
+            {email === ADMIN_EMAIL && (
                   <div style={{ marginTop: "12px", padding: "14px 16px", borderRadius: "10px", background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -487,6 +512,12 @@ export default function Dashboard() {
                 )}
 
                 {/* Error */}
+                {lowCredits && creditBalance !== null && (
+                  <div style={{ padding: "12px 16px", borderRadius: "10px", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", marginBottom: "12px" }}>
+                    <p style={{ color: "#f87171", fontSize: "13px", marginBottom: "4px", fontWeight: 500 }}>⚠️ Low credits — {creditBalance} remaining</p>
+                    <a href="/credits" style={{ color: "#f59e0b", fontSize: "12px" }}>Top up here →</a>
+                  </div>
+                )}
                 {error && (
                   <div style={{ padding: "12px 16px", borderRadius: "10px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
                     <p style={{ color: "#f87171", fontSize: "13px" }}>{error}</p>
@@ -756,6 +787,9 @@ export default function Dashboard() {
                 <div><p style={{ color: "#f59e0b", fontSize: "28px", fontWeight: 700 }}>{seriesList.length}</p><p style={{ color: "#57534e", fontSize: "12px" }}>Series</p></div>
               </div>
             </div>
+            <a href="/credits" style={{ display: "block", width: "100%", padding: "13px", borderRadius: "10px", fontSize: "14px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)", color: "#f59e0b", cursor: "pointer", textAlign: "center" as const, textDecoration: "none", marginBottom: "12px" }}>
+              💳 Credits — {creditBalance !== null ? `${creditBalance} remaining` : "Top Up"}
+            </a>
             {email === ADMIN_EMAIL && (
               <a href="/admin" style={{ display: "block", width: "100%", padding: "13px", borderRadius: "10px", fontSize: "14px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", color: "#f59e0b", cursor: "pointer", textAlign: "center" as const, textDecoration: "none", marginBottom: "12px" }}>
                 ⚙️ Admin Console
