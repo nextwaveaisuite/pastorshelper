@@ -463,10 +463,13 @@ export default function Dashboard() {
                 {/* First Nations Ministry — Admin Only */}
                 {email === ADMIN_EMAIL && (
                   <div style={{ marginTop: "12px", padding: "14px 16px", borderRadius: "10px", background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                      <span style={{ fontSize: "16px" }}>🪃</span>
-                      <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, fontWeight: 600 }}>First Nations Ministry</p>
-                      <span style={{ padding: "2px 8px", borderRadius: "10px", background: "rgba(139,92,246,0.15)", color: "#a78bfa", fontSize: "10px" }}>🔒 LOCKED</span>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "16px" }}>🪃</span>
+                        <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, fontWeight: 600 }}>First Nations Ministry</p>
+                        <span style={{ padding: "2px 8px", borderRadius: "10px", background: "rgba(139,92,246,0.15)", color: "#a78bfa", fontSize: "10px" }}>🔒 LOCKED</span>
+                      </div>
+                      <a href="/admin/first-nations-map" style={{ fontSize: "11px", color: "#a78bfa", textDecoration: "none", display: "flex", alignItems: "center", gap: "4px" }}>🗺 Map</a>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                       {FIRST_NATIONS_LANGUAGES.map((l) => (
