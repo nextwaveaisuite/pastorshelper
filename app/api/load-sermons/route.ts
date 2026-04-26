@@ -1,26 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-
 export async function POST(req: Request) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-  const { user_id } = await req.json();
-
-  if (!user_id) {
-    return NextResponse.json({ error: "User ID required" }, { status: 400 });
-  }
-
-  const { data, error } = await supabase
-    .from("sermons")
-    .select("*")
-    .eq("user_id", user_id)
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  return NextResponse.json({ sermons: data });
+  try {
+    const text = await req.text();
+    const { user_id } = text ? JSON.parse(text) : {};
+    if (!user_id) return NextResponse.json({ sermons: [] });
+    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+    const { data } = await supabase.from("sermons").select("*").eq("user_id", user_id).order("created_at", { ascending: false });
+    return NextResponse.json({ sermons: data || [] });
+  } catch (e) { console.error(e); return NextResponse.json({ sermons: [] }); }
 }
