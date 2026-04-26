@@ -134,7 +134,7 @@ export default function Home() {
         {/* Hero */}
         <section style={{ textAlign: "center", padding: "60px 20px 48px", position: "relative", zIndex: 10 }}>
           <div style={{ display: "inline-block", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "40px", padding: "5px 16px", marginBottom: "24px", fontSize: "11px", letterSpacing: "2px", color: "#f59e0b", textTransform: "uppercase" as const }}>
-            Spirit-Led Sermon Building
+            Sermon Building for Every Pastor
           </div>
 
           <h1 className="font-serif" style={{ fontSize: "clamp(32px, 8vw, 68px)", lineHeight: 1.1, marginBottom: "20px" }}>
