@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const { topic, audience, tone, level, language } = await req.json();
 
+  const user_id_header = req.headers.get("x-user-id") || "";
   if (!topic) {
     return NextResponse.json({ error: "Topic is required" }, { status: 400 });
   }
@@ -237,6 +238,16 @@ Return this complete JSON — ALL fields required:
 
     sermon.closingPrayer = (sermon.closingPrayer as string) ||
       "May the Lord bless you and keep you — may He make His face shine upon you and be gracious to you. (Numbers 6:24-25) Go in the peace and power of His Word. Amen.";
+
+    // Log usage analytics
+    if (topic && user_id_header) {
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+        await supabase.from("sermon_usage").insert({ user_id: user_id_header, topic, level: level || "beginner", language: targetLanguage, tone, audience });
+        await supabase.from("user_profiles").update({ total_sermons_generated: supabase.rpc("increment", { x: 1 }), last_seen: new Date().toISOString() }).eq("id", user_id_header).catch(() => {});
+      } catch { /* non-fatal */ }
+    }
 
     return NextResponse.json({ sermon });
 
