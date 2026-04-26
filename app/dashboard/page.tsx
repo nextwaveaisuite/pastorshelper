@@ -121,16 +121,21 @@ export default function Dashboard() {
 
   const loadSermons = useCallback(async (userId: string) => {
     setLoadingSermons(true);
-    const { data } = await supabase.from("sermons").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-    setSermons((data as Sermon[]) || []);
+    try {
+      const { data } = await supabase.from("sermons").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+      setSermons((data as Sermon[]) || []);
+    } catch { setSermons([]); }
     setLoadingSermons(false);
   }, []);
 
   const loadSeries = useCallback(async (userId: string) => {
     setLoadingSeries(true);
-    const res = await fetch("/api/series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId }) });
-    const data = await res.json();
-    setSeriesList(data.series || []);
+    try {
+      const res = await fetch("/api/series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId }) });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+      setSeriesList(data.series || []);
+    } catch { setSeriesList([]); }
     setLoadingSeries(false);
   }, []);
 
@@ -222,13 +227,14 @@ export default function Dashboard() {
     if (!generatedSermon || !user) return;
     setSaving(true);
     const res = await fetch("/api/save-sermon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user.id, title: generatedSermon.title || topic, topic, audience, tone, content: generatedSermon }) });
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
     setSaving(false);
     if (data.success) { setSaveSuccess(true); loadSermons(user.id); }
   };
 
   const deleteSermon = async (id: string) => {
-    await fetch("/api/delete-sermon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, user_id: user?.id }) });
+    try { await fetch("/api/delete-sermon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, user_id: user?.id }) }); } catch {}
     loadSermons(user!.id); loadSeries(user!.id);
   };
 
@@ -236,7 +242,8 @@ export default function Dashboard() {
     if (!newSeriesName.trim() || !user) return;
     setCreatingSeries(true);
     const res = await fetch("/api/create-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user.id, name: newSeriesName, description: newSeriesDesc }) });
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
     setCreatingSeries(false);
     if (data.success) { setNewSeriesName(""); setNewSeriesDesc(""); setShowNewSeries(false); loadSeries(user.id); }
   };
@@ -247,7 +254,7 @@ export default function Dashboard() {
   };
 
   const assignToSeries = async (sermonId: string, seriesId: string | null) => {
-    await fetch("/api/assign-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sermon_id: sermonId, series_id: seriesId, user_id: user?.id }) });
+    try { await fetch("/api/assign-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sermon_id: sermonId, series_id: seriesId, user_id: user?.id }) }); } catch {}
     setAssigningSermon(null); loadSermons(user!.id); loadSeries(user!.id);
   };
 
