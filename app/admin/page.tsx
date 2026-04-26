@@ -28,6 +28,14 @@ type Stats = {
   recentSermons: { title: string; tone: string; audience: string; created_at: string }[];
 };
 
+async function safeFetch(url: string, body: Record<string, unknown>) {
+  try {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
+  } catch { return {}; }
+}
+
 export default function AdminPage() {
   const [email, setEmail] = useState("");
   const [authed, setAuthed] = useState(false);
@@ -55,42 +63,24 @@ export default function AdminPage() {
   }, [router]);
 
   const loadStats = useCallback(async (adminEmail: string) => {
-    const res = await fetch("/api/admin/stats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requester_email: adminEmail }),
-    });
-    const data = await res.json();
-    if (data.stats) setStats(data.stats);
+    const data = await safeFetch("/api/admin/stats", { requester_email: adminEmail });
+    if (data.stats) setStats(data.stats as Stats);
   }, []);
 
   const loadUsers = useCallback(async (adminEmail: string) => {
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requester_email: adminEmail }),
-    });
-    const data = await res.json();
-    if (data.users) setUsers(data.users);
+    const data = await safeFetch("/api/admin/users", { requester_email: adminEmail });
+    if (data.users) setUsers(data.users as User[]);
   }, []);
 
   const deleteUser = async (userId: string) => {
     if (!confirm("Permanently delete this user and all their data?")) return;
-    await fetch("/api/admin/delete-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requester_email: email, user_id: userId }),
-    });
+    await safeFetch("/api/admin/delete-user", { requester_email: email, user_id: userId });
     loadUsers(email);
     loadStats(email);
   };
 
   const banUser = async (userId: string, ban: boolean) => {
-    await fetch("/api/admin/ban-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requester_email: email, user_id: userId, ban, reason: banReason }),
-    });
+    await safeFetch("/api/admin/ban-user", { requester_email: email, user_id: userId, ban, reason: banReason });
     setBanTarget(null);
     setBanReason("");
     loadUsers(email);
