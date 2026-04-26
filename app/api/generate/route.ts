@@ -58,11 +58,24 @@ export async function POST(req: Request) {
       : `\nLANGUAGE: Write ALL sermon content in ${targetLanguage}. Scripture references stay in standard format (e.g. John 3:16) but all other text must be in ${targetLanguage}.`
     : "";
 
+
+  // Tone-specific instructions
+  const toneInstructions: Record<string, string> = {
+    "Teaching": "TEACHING tone — systematic expository preaching. Break down scripture methodically. Build understanding and knowledge. Focus on clear application of God's Word.",
+    "Evangelistic": "EVANGELISTIC tone — every point leads toward salvation. Speak to the lost and searching. Use scripture that calls people to repentance and faith in Christ.",
+    "Pastoral": "PASTORAL tone — shepherding and nurturing the flock. Address real struggles with scriptural comfort and wisdom. Strengthen and care for the congregation.",
+    "General Prayer": "GENERAL PRAYER ministry tone — build toward congregational prayer time. Include scripture promises covering healing, peace, restoration, provision, and breakthrough. The altar call invites ALL who need prayer — sick, broken, weary, lost — to come forward.",
+    "Warfare": "SPIRITUAL WARFARE tone — equip the congregation to stand against spiritual attacks. Use Ephesians 6, Daniel, warfare Psalms. Build toward corporate declaration over darkness. The altar call is bold scriptural declaration over the congregation.",
+  };
+  const toneInstruction = toneInstructions[tone] || toneInstructions["Teaching"];
+
   const systemPrompt = `You are a Scripture-rich sermon builder. You output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }. Every field must be complete. Scripture references must include the actual verse text, not just the reference.`;
 
   const userPrompt = `Create a unique, Scripture-rich sermon on: "${topic}"
 Audience: ${audience} | Tone: ${tone}
 ${levelText}${langInstruction}
+
+${toneInstruction}
 
 CRITICAL SCRIPTURE RULE: Every section must contain actual scripture verse text, not just references.
 Format all scriptures as: "Book Chapter:Verse — verse text here"
