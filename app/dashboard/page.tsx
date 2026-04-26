@@ -67,6 +67,22 @@ const FIRST_NATIONS_LANGUAGES = [
 
 type SeriesWithSermons = Series & { sermons: Partial<Sermon>[] };
 
+// Safe fetch — never throws, always returns an object
+async function safeFetch(url: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    if (!text || !text.trim()) return {};
+    try { return JSON.parse(text); } catch { return {}; }
+  } catch { return {}; }
+}
+
+
+
 function Label({ children }: { children: React.ReactNode }) {
   return (
     <p style={{ color: "#a8956e", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "10px", fontWeight: 500 }}>
@@ -125,17 +141,13 @@ export default function Dashboard() {
       const { data } = await supabase.from("sermons").select("*").eq("user_id", userId).order("created_at", { ascending: false });
       setSermons((data as Sermon[]) || []);
     } catch { setSermons([]); }
-    setLoadingSermons(false);
+    finally { setLoadingSermons(false); }
   }, []);
 
   const loadSeries = useCallback(async (userId: string) => {
     setLoadingSeries(true);
-    try {
-      const res = await fetch("/api/series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId }) });
-      const text = await res.text();
-      const data = text ? JSON.parse(text) : {};
-      setSeriesList(data.series || []);
-    } catch { setSeriesList([]); }
+    const data = await safeFetch("/api/series", { user_id: userId });
+    setSeriesList((data.series as SeriesWithSermons[]) || []);
     setLoadingSeries(false);
   }, []);
 
@@ -200,12 +212,11 @@ export default function Dashboard() {
     try {
       // Deduct credits first
       const creditCost = level === "advanced" ? 3 : level === "intermediate" ? 2 : 1;
-      const deductRes = await fetch("/api/credits/deduct", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user?.id, level, topic }) });
-      const deductData = await deductRes.json();
-      if (deductRes.status === 402) {
-        throw new Error(`Not enough credits. You need ${deductData.cost} credit${deductData.cost > 1 ? "s" : ""} but have ${deductData.balance}. Top up at the Credits page.`);
+      const deductData = await safeFetch("/api/credits/deduct", { user_id: user?.id || "", level, topic });
+      if (deductData.error === "insufficient_credits") {
+        throw new Error(`Not enough credits. You need ${deductData.cost} credit${Number(deductData.cost) > 1 ? "s" : ""} but have ${deductData.balance}. Top up at the Credits page.`);
       }
-      if (deductData.new_balance !== undefined) setCreditBalance(deductData.new_balance);
+      if (deductData.new_balance !== undefined) setCreditBalance(Number(deductData.new_balance));
 
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -226,35 +237,31 @@ export default function Dashboard() {
   const saveSermon = async () => {
     if (!generatedSermon || !user) return;
     setSaving(true);
-    const res = await fetch("/api/save-sermon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user.id, title: generatedSermon.title || topic, topic, audience, tone, content: generatedSermon }) });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+    const data = await safeFetch("/api/save-sermon", { user_id: user.id, title: generatedSermon.title || topic, topic, audience, tone, content: generatedSermon });
     setSaving(false);
     if (data.success) { setSaveSuccess(true); loadSermons(user.id); }
   };
 
   const deleteSermon = async (id: string) => {
-    try { await fetch("/api/delete-sermon", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, user_id: user?.id }) }); } catch {}
+    await safeFetch("/api/delete-sermon", { id, user_id: user?.id || "" });
     loadSermons(user!.id); loadSeries(user!.id);
   };
 
   const createSeries = async () => {
     if (!newSeriesName.trim() || !user) return;
     setCreatingSeries(true);
-    const res = await fetch("/api/create-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: user.id, name: newSeriesName, description: newSeriesDesc }) });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : {};
+    const data = await safeFetch("/api/create-series", { user_id: user.id, name: newSeriesName, description: newSeriesDesc });
     setCreatingSeries(false);
     if (data.success) { setNewSeriesName(""); setNewSeriesDesc(""); setShowNewSeries(false); loadSeries(user.id); }
   };
 
   const deleteSeries = async (id: string) => {
-    await fetch("/api/delete-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, user_id: user?.id }) });
+    await safeFetch("/api/delete-series", { id, user_id: user?.id || "" });
     loadSeries(user!.id); loadSermons(user!.id);
   };
 
   const assignToSeries = async (sermonId: string, seriesId: string | null) => {
-    try { await fetch("/api/assign-series", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sermon_id: sermonId, series_id: seriesId, user_id: user?.id }) }); } catch {}
+    await safeFetch("/api/assign-series", { sermon_id: sermonId, series_id: seriesId, user_id: user?.id || "" });
     setAssigningSermon(null); loadSermons(user!.id); loadSeries(user!.id);
   };
 
