@@ -432,12 +432,10 @@ export default function Dashboard() {
                   </button>
 
                   {showLangPicker && (
-                    <div style={{ marginTop: "10px", border: "1px solid rgba(245,158,11,0.1)", borderRadius: "10px", overflow: "hidden", maxHeight: "240px", overflowY: "auto" }}>
+                    <div style={{ marginTop: "10px", border: "1px solid rgba(245,158,11,0.1)", borderRadius: "10px", padding: "12px", display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {LANGUAGES.map((l) => (
-                        <button key={l.code} onClick={() => { setLanguage(l.code); setShowLangPicker(false); }} style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", padding: "11px 14px", border: "none", borderBottom: "1px solid rgba(245,158,11,0.05)", background: language === l.code ? "rgba(245,158,11,0.07)" : "transparent", cursor: "pointer" }}>
-                          <span style={{ fontSize: "18px" }}>{l.flag}</span>
-                          <span style={{ color: language === l.code ? "#f59e0b" : "#a8956e", fontSize: "14px", flex: 1, textAlign: "left" as const }}>{l.label}</span>
-                          {language === l.code && <span style={{ color: "#f59e0b", fontSize: "12px" }}>✓</span>}
+                        <button key={l.code} onClick={() => { setLanguage(l.code); setShowLangPicker(false); }} title={l.label} style={{ width: "42px", height: "42px", borderRadius: "8px", border: "2px solid", borderColor: language === l.code ? "#f59e0b" : "transparent", background: language === l.code ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.03)", cursor: "pointer", fontSize: "22px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {l.flag}
                         </button>
                       ))}
                     </div>
