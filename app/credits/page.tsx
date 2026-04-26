@@ -76,13 +76,8 @@ function CreditsInner() {
       setUser(data.session.user);
 
       // Load credits
-      const res = await fetch("/api/credits/balance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: data.session.user.id }),
-      });
-      const cData = await res.json();
-      if (cData.credits) setCredits(cData.credits);
+      const cData = await safeFetch("/api/credits/balance", { user_id: data.session.user.id });
+      if (cData.credits) setCredits(cData.credits as typeof credits);
 
       setLoading(false);
     });
@@ -91,12 +86,7 @@ function CreditsInner() {
   const purchase = async (packId: string) => {
     if (!user) return;
     setPurchasing(packId);
-    const res = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pack_id: packId, user_id: user.id, user_email: user.email }),
-    });
-    const data = await res.json();
+    const data = await safeFetch("/api/stripe/checkout", { pack_id: packId, user_id: user.id, user_email: user.email || "" });
     if (data.url) {
       window.location.href = data.url;
     } else {
