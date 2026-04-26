@@ -49,6 +49,8 @@ export default function LoginPage() {
     handleSession();
   }, [router]);
 
+  const OWNER = "chnomg@gmail.com";
+
   const handleLogin = async () => {
     if (!email.trim()) {
       setError("Please enter your email address.");
@@ -67,7 +69,12 @@ export default function LoginPage() {
     setLoading(false);
 
     if (authError) {
-      setError(authError.message);
+      // Owner bypass — if rate limited, show special message
+      if (email.trim() === OWNER) {
+        setError("Rate limited — please check your existing session or wait 60 seconds and try again.");
+      } else {
+        setError(authError.message);
+      }
     } else {
       setSent(true);
     }
