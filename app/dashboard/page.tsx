@@ -652,7 +652,14 @@ export default function Dashboard() {
                     <div key={i} style={{ marginBottom: i < generatedSermon.teachingPoints.length - 1 ? "22px" : 0, paddingBottom: i < generatedSermon.teachingPoints.length - 1 ? "22px" : 0, borderBottom: i < generatedSermon.teachingPoints.length - 1 ? "1px solid rgba(245,158,11,0.07)" : "none" }}>
                       <p style={{ color: "#f59e0b", fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" as const, marginBottom: "4px" }}>Point {i + 1}</p>
                       <h3 className="font-serif" style={{ color: "#fef3c7", fontSize: "17px", marginBottom: "8px" }}>{point.title}</h3>
-                      <p style={{ color: "#fbbf24", fontSize: "12px", marginBottom: "10px" }}>{point.scripture}</p>
+                      <p style={{ color: "#fbbf24", fontSize: "12px", marginBottom: "8px" }}>{point.scripture}</p>
+                      {point.supportingScriptures && (point.supportingScriptures as string[]).length > 0 && (
+                        <div style={{ marginBottom: "10px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                          {(point.supportingScriptures as string[]).map((s: string, si: number) => (
+                            <p key={si} style={{ color: "#a8956e", fontSize: "12px", fontStyle: "italic" }}>✝ {s}</p>
+                          ))}
+                        </div>
+                      )}
                       <p style={{ color: "#fef3c7", lineHeight: 1.8, marginBottom: "10px", fontSize: "14px" }}>{point.explanation}</p>
                       <div style={{ background: "rgba(245,158,11,0.04)", borderLeft: "2px solid rgba(245,158,11,0.3)", padding: "10px 14px", borderRadius: "0 6px 6px 0" }}>
                         <p style={{ color: "#a8956e", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase" as const, marginBottom: "4px" }}>Application</p>
