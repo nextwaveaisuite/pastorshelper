@@ -16,8 +16,17 @@ export async function POST(req: Request) {
   };
 
   const levelText = levelInstructions[level || "beginner"];
+  // Special handling for Pacific/Islander varieties
+  const languageStyleMap: Record<string, string> = {
+    "Bislama": "Bislama — the Creole language of Vanuatu. Use simple Bislama phrases and structure where possible, mixing with English where needed.",
+    "South Sea Islander": "South Sea Islander English — warm, community-focused, deeply faith-rooted language style used by South Sea Islander communities in Australia and the Pacific. Simple, heartfelt, communal tone.",
+    "Pacific Islander English": "Pacific Islander English — warm, storytelling style, deeply rooted in faith and community. Use accessible English with Pacific cultural references, communal values, and family-centred illustrations.",
+  };
+
   const langInstruction = targetLanguage !== "English"
-    ? `\nWrite ALL sermon content in ${targetLanguage}. Scripture references stay in standard format (e.g. John 3:16) but all other content must be in ${targetLanguage}.`
+    ? languageStyleMap[targetLanguage]
+      ? `\n${languageStyleMap[targetLanguage]}`
+      : `\nWrite ALL sermon content in ${targetLanguage}. Scripture references stay in standard format (e.g. John 3:16) but all other content must be in ${targetLanguage}.`
     : "";
 
   const systemPrompt = `You are a Spirit-led sermon builder. Output ONLY valid JSON — no markdown, no backticks, no explanation. Start with { and end with }. CRITICAL: Every single field in the JSON must be completed. Never stop generating before the closing brace. Keep every field to exactly 1-2 sentences so the full sermon fits within the response.`;
@@ -106,10 +115,15 @@ Return this complete JSON — all fields required, none can be empty:
     if (!response.ok) {
       const errText = await response.text();
       console.error("Anthropic API error:", response.status, errText);
-      return NextResponse.json(
-        { error: `API error ${response.status} — please try again.` },
-        { status: 500 }
-      );
+      let userError = "Generation failed — please try again.";
+      if (response.status === 429 || errText.includes("usage_exceeded") || errText.includes("rate_limit")) {
+        userError = "API usage limit reached. Please wait a moment and try again.";
+      } else if (response.status === 401) {
+        userError = "API key error — please contact support.";
+      } else if (response.status === 402) {
+        userError = "API billing issue — please contact support.";
+      }
+      return NextResponse.json({ error: userError }, { status: 500 });
     }
 
     const data = await response.json();
