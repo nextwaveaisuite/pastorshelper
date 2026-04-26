@@ -69,6 +69,7 @@ export type SermonContent = {
   teachingPoints: {
     title: string;
     scripture: string;
+    supportingScriptures?: string[];
     explanation: string;
     application: string;
   }[];
