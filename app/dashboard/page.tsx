@@ -180,15 +180,11 @@ export default function Dashboard() {
 
       // Load credits — wrapped in try/catch so it never crashes the page
       try {
-        const r = await fetch("/api/credits/balance", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_id: u.id }),
-        });
-        const d = await r.json();
+        const d = await safeFetch("/api/credits/balance", { user_id: u.id });
         if (d.credits) {
-          setCreditBalance(d.credits.balance);
-          setLowCredits(d.credits.balance < 3);
+          const bal = (d.credits as { balance: number }).balance;
+          setCreditBalance(bal);
+          setLowCredits(bal < 3);
         }
       } catch { /* non-fatal */ }
 
