@@ -10,27 +10,77 @@ import Link from "next/link";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace("/dashboard");
-    });
+    // Handle magic link callback — Supabase puts tokens in the URL hash
+    const handleSession = async () => {
+      // Give Supabase a moment to process the hash
+      await new Promise((r) => setTimeout(r, 300));
+
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      // Try exchanging code if present in URL (PKCE flow)
+      if (typeof window !== "undefined") {
+        const hash = window.location.hash;
+        const params = new URLSearchParams(window.location.search);
+
+        if (hash.includes("access_token") || params.get("code")) {
+          // Let Supabase handle it automatically
+          await new Promise((r) => setTimeout(r, 800));
+          const { data: refreshed } = await supabase.auth.getSession();
+          if (refreshed.session) {
+            router.replace("/dashboard");
+            return;
+          }
+        }
+      }
+
+      setChecking(false);
+    };
+
+    handleSession();
   }, [router]);
 
   const handleLogin = async () => {
-    if (!email.trim()) { setError("Please enter your email address."); return; }
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
     setLoading(true);
     setError("");
+
     const { error: authError } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: "https://thepastorshelper.netlify.app/dashboard" },
+      options: {
+        emailRedirectTo: "https://thepastorshelper.com/dashboard",
+      },
     });
+
     setLoading(false);
-    if (authError) { setError(authError.message); } else { setSent(true); }
+
+    if (authError) {
+      setError(authError.message);
+    } else {
+      setSent(true);
+    }
   };
+
+  if (checking) return (
+    <div style={{ minHeight: "100vh", background: "#0f0a05", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ color: "#f59e0b", fontFamily: "Georgia, serif", fontSize: "16px", marginBottom: "8px" }}>Signing you in...</p>
+        <p style={{ color: "#57534e", fontSize: "13px" }}>Please wait</p>
+      </div>
+    </div>
+  );
 
   return (
     <main style={{ minHeight: "100vh", background: "#0f0a05", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", position: "relative", overflow: "hidden" }}>
