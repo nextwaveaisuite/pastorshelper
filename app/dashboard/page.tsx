@@ -216,7 +216,7 @@ export default function Dashboard() {
 
       const res = await fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-user-id": user?.id || "" },
         body: JSON.stringify({ topic, audience, tone, level, language }),
       });
       const text = await res.text();
