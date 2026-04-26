@@ -1,316 +1,286 @@
 "use client";
 
-import Link from "next/link";
-import Script from "next/script";
+export const dynamic = "force-dynamic";
 
-export default function Home() {
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebSite",
-        "@id": "https://thepastorshelper.com/#website",
-        "url": "https://thepastorshelper.com",
-        "name": "The Pastors Helper",
-        "description": "Spirit-Led Sermon Builder for Pastors and Ministers",
-        "inLanguage": "en-US",
-      },
-      {
-        "@type": "Organization",
-        "@id": "https://thepastorshelper.com/#organization",
-        "name": "The Pastors Helper",
-        "url": "https://thepastorshelper.com",
-        "description": "A complete sermon building platform for pastors, ministers, and church leaders worldwide.",
-        "sameAs": [],
-      },
-      {
-        "@type": "SoftwareApplication",
-        "@id": "https://thepastorshelper.com/#app",
-        "name": "The Pastors Helper",
-        "applicationCategory": "ReligiousApplication",
-        "operatingSystem": "Web, iOS, Android",
-        "description": "Spirit-led sermon builder that generates complete Scripture-anchored sermons with teaching points, ministry flow, altar calls, and preach mode. Available in 33 languages for pastors at every level.",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD",
-          "availability": "https://schema.org/InStock",
-        },
-        "featureList": [
-          "Anchor Scripture Engine",
-          "9-Section Sermon Structure",
-          "Ministry Flow Prompts",
-          "Preach Mode",
-          "Sermon Series Builder",
-          "PDF Export",
-          "33 Languages",
-          "Beginner, Intermediate and Advanced levels",
-          "Sermon Library",
-        ],
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "5",
-          "ratingCount": "1",
-        },
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "Is The Pastors Helper free to use?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes, The Pastors Helper is free to get started. Create an account with just your email — no password needed.",
-            },
-          },
-          {
-            "@type": "Question",
-            "name": "Can The Pastors Helper generate sermons in different languages?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes. The Pastors Helper generates complete sermons in 33 languages including English, Spanish, French, Portuguese, Samoan, Tongan, Fijian, Te Reo Māori, Tok Pisin, Swahili, Yoruba, Arabic, Hindi, Mandarin, Korean, and many more.",
-            },
-          },
-          {
-            "@type": "Question",
-            "name": "Are the sermons unique to each pastor?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes. Every sermon is generated fresh each time. Even if two pastors use the same topic, they receive completely different sermons with unique illustrations, teaching points, and ministry flow. All saved sermons are private to each user.",
-            },
-          },
-          {
-            "@type": "Question",
-            "name": "What is included in a generated sermon?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Every sermon includes an Anchor Scripture, Opening, Foundation, Foreword, 3 Core Teaching Points with application, Ministry Flow (Gift of Knowledge, Impartation, Edification, Slow Down, Return to Anchor), Summary, Altar Call with guided prayer, and Closing Prayer.",
-            },
-          },
-          {
-            "@type": "Question",
-            "name": "Can I build a sermon series?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes. The Sermon Series Builder lets you create named series, assign individual sermons to each week, and view the full multi-week arc in one place.",
-            },
-          },
-          {
-            "@type": "Question",
-            "name": "Is The Pastors Helper suitable for new pastors?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Absolutely. The Beginner level uses simple, clear language with relatable examples for new believers and new ministers. The tool also includes a library of over 300 sermon topics across 16 categories to help new pastors find the right direction.",
-            },
-          },
-        ],
-      },
-    ],
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+
+const ADMIN_EMAIL = "chnomg@gmail.com";
+
+type User = {
+  id: string;
+  email: string;
+  is_banned: boolean;
+  ban_reason: string | null;
+  sermon_count: number;
+  created_at: string;
+  last_seen: string;
+};
+
+type Stats = {
+  totalUsers: number;
+  totalSermons: number;
+  totalSeries: number;
+  viewsByPage: Record<string, number>;
+  viewsByDay: Record<string, number>;
+  recentUsers: { email: string; created_at: string }[];
+  recentSermons: { title: string; tone: string; audience: string; created_at: string }[];
+};
+
+export default function AdminPage() {
+  const [email, setEmail] = useState("");
+  const [authed, setAuthed] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "users">("dashboard");
+  const [users, setUsers] = useState<User[]>([]);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [banReason, setBanReason] = useState("");
+  const [banTarget, setBanTarget] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) { router.replace("/login"); return; }
+      const userEmail = data.session.user.email || "";
+      setEmail(userEmail);
+      if (userEmail === ADMIN_EMAIL) {
+        setAuthed(true);
+        loadStats(userEmail);
+        loadUsers(userEmail);
+      }
+      setLoading(false);
+    });
+  }, [router]);
+
+  const loadStats = useCallback(async (adminEmail: string) => {
+    const res = await fetch("/api/admin/stats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requester_email: adminEmail }),
+    });
+    const data = await res.json();
+    if (data.stats) setStats(data.stats);
+  }, []);
+
+  const loadUsers = useCallback(async (adminEmail: string) => {
+    const res = await fetch("/api/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requester_email: adminEmail }),
+    });
+    const data = await res.json();
+    if (data.users) setUsers(data.users);
+  }, []);
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm("Permanently delete this user and all their data?")) return;
+    await fetch("/api/admin/delete-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requester_email: email, user_id: userId }),
+    });
+    loadUsers(email);
+    loadStats(email);
   };
 
+  const banUser = async (userId: string, ban: boolean) => {
+    await fetch("/api/admin/ban-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requester_email: email, user_id: userId, ban, reason: banReason }),
+    });
+    setBanTarget(null);
+    setBanReason("");
+    loadUsers(email);
+  };
+
+  const filteredUsers = users.filter(u =>
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) return (
+    <div style={{ minHeight: "100vh", background: "#0a0704", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <p style={{ color: "#f59e0b" }}>Loading...</p>
+    </div>
+  );
+
+  if (!authed) return (
+    <div style={{ minHeight: "100vh", background: "#0a0704", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ color: "#f87171", fontSize: "18px", marginBottom: "8px" }}>Access Denied</p>
+        <p style={{ color: "#57534e", fontSize: "14px" }}>This area is restricted.</p>
+      </div>
+    </div>
+  );
+
+  const maxViews = stats ? Math.max(...Object.values(stats.viewsByDay), 1) : 1;
+
   return (
-    <>
-      <Script
-        id="structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+    <div style={{ minHeight: "100vh", background: "#0a0704", color: "#fef3c7" }}>
+      {/* Header */}
+      <header style={{ background: "rgba(15,10,5,0.98)", borderBottom: "1px solid rgba(245,158,11,0.1)", padding: "14px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "16px" }}>✝</span>
+          <span style={{ color: "#f59e0b", fontFamily: "Georgia, serif", fontSize: "15px", fontWeight: 600 }}>The Pastors Helper</span>
+          <span style={{ color: "#57534e", fontSize: "12px", marginLeft: "8px" }}>Admin Console</span>
+        </div>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span style={{ color: "#57534e", fontSize: "12px" }}>{email}</span>
+          <button onClick={() => router.push("/dashboard")} style={{ padding: "7px 14px", borderRadius: "6px", border: "1px solid rgba(245,158,11,0.2)", background: "transparent", color: "#a8956e", cursor: "pointer", fontSize: "12px" }}>
+            → Dashboard
+          </button>
+        </div>
+      </header>
 
-      <main style={{ minHeight: "100vh", background: "#0f0a05", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "fixed", inset: 0, backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245,158,11,0.12) 0%, transparent 60%)", pointerEvents: "none" }} />
+      {/* Tab bar */}
+      <div style={{ display: "flex", borderBottom: "1px solid rgba(245,158,11,0.08)", padding: "0 24px" }}>
+        {[
+          { key: "dashboard", label: "📊 Dashboard" },
+          { key: "users",     label: "👥 Users" },
+        ].map(({ key, label }) => (
+          <button key={key} onClick={() => setActiveTab(key as "dashboard" | "users")} style={{ padding: "14px 20px", border: "none", background: "transparent", color: activeTab === key ? "#f59e0b" : "#57534e", cursor: "pointer", fontSize: "14px", fontWeight: activeTab === key ? 600 : 400, borderBottom: activeTab === key ? "2px solid #f59e0b" : "2px solid transparent", marginBottom: "-1px" }}>
+            {label}
+          </button>
+        ))}
+      </div>
 
-        {/* Nav */}
-        <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid rgba(245,158,11,0.08)", position: "relative", zIndex: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "18px" }}>✝</span>
-            <span className="font-serif" style={{ color: "#f59e0b", fontSize: "16px", fontWeight: 600 }}>The Pastors Helper</span>
-          </div>
-          <Link href="/login" className="btn-gold" style={{ padding: "8px 18px", borderRadius: "6px", fontSize: "13px", textDecoration: "none", display: "inline-block" }}>
-            Get Started Free
-          </Link>
-        </nav>
+      <main style={{ padding: "24px", maxWidth: "1100px", margin: "0 auto" }}>
 
-        {/* Hero */}
-        <section style={{ textAlign: "center", padding: "60px 20px 48px", position: "relative", zIndex: 10 }}>
-          <div style={{ display: "inline-block", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: "40px", padding: "5px 16px", marginBottom: "24px", fontSize: "11px", letterSpacing: "2px", color: "#f59e0b", textTransform: "uppercase" as const }}>
-            Sermon Building for Every Pastor
-          </div>
-
-          <h1 className="font-serif" style={{ fontSize: "clamp(32px, 8vw, 68px)", lineHeight: 1.1, marginBottom: "20px" }}>
-            <span style={{ color: "#fef3c7" }}>The Sermon Builder</span><br />
-            <span style={{ color: "#fef3c7" }}>Every Pastor </span>
-            <span className="text-gold-gradient">Needs.</span>
-          </h1>
-
-          <p style={{ color: "#a8956e", fontSize: "17px", lineHeight: 1.75, maxWidth: "520px", margin: "0 auto 12px" }}>
-            Build complete, Scripture-anchored sermons in seconds — with teaching points, ministry flow, altar calls, and preach mode.
-          </p>
-          <p style={{ color: "#78716c", fontSize: "14px", marginBottom: "36px" }}>
-            For pastors at every level · 33 languages · Beginner to Advanced
-          </p>
-
-          <Link href="/login" className="btn-gold" style={{ padding: "15px 36px", borderRadius: "8px", fontSize: "16px", textDecoration: "none", display: "block", maxWidth: "300px", margin: "0 auto 16px", textAlign: "center" as const }}>
-            Start Building Free →
-          </Link>
-          <p style={{ color: "#57534e", fontSize: "12px" }}>No credit card · No password · Just your email</p>
-
-          <p style={{ marginTop: "48px", color: "rgba(168,149,110,0.45)", fontSize: "13px", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            &ldquo;Preach the word; be ready in season and out of season.&rdquo; — 2 Timothy 4:2
-          </p>
-        </section>
-
-        {/* Stats bar */}
-        <section style={{ padding: "20px", position: "relative", zIndex: 10 }}>
-          <div style={{ maxWidth: "600px", margin: "0 auto", display: "flex", justifyContent: "center", gap: "32px", flexWrap: "wrap" }}>
-            {[
-              { num: "300+", label: "Sermon Topics" },
-              { num: "33",   label: "Languages" },
-              { num: "9",    label: "Sermon Sections" },
-              { num: "3",    label: "Skill Levels" },
-            ].map((s) => (
-              <div key={s.label} style={{ textAlign: "center" }}>
-                <p className="font-serif" style={{ color: "#f59e0b", fontSize: "26px", fontWeight: 700 }}>{s.num}</p>
-                <p style={{ color: "#57534e", fontSize: "12px" }}>{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Features */}
-        <section style={{ padding: "48px 20px", maxWidth: "600px", margin: "0 auto", position: "relative", zIndex: 10 }}>
-          <div className="cross-divider" style={{ marginBottom: "40px", fontSize: "18px" }}>✝</div>
-          <h2 className="font-serif" style={{ textAlign: "center", fontSize: "28px", color: "#fef3c7", marginBottom: "32px" }}>
-            Everything You Need to Preach with Power
-          </h2>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {[
-              { icon: "📖", title: "Anchor Scripture Engine",     desc: "ASE finds your primary verse, cross-references, and the core theme that ties the whole sermon together." },
-              { icon: "🏗️", title: "9-Section Sermon Blueprint", desc: "Opening, Foundation, Foreword, 3 Teaching Points, Ministry Flow, Altar Call, and Closing Prayer — fully structured." },
-              { icon: "🔥", title: "Deep Ministry Flow",          desc: "Gift of Knowledge, Impartation, Edification, Slow Down moments, and Return to Anchor — built for Spirit-led delivery." },
-              { icon: "🎤", title: "Preach Mode",                 desc: "Full-screen delivery view designed for behind the pulpit. Large text, clean layout, section by section." },
-              { icon: "📚", title: "Series Builder",              desc: "Create multi-week series, assign sermons week by week, and see your full teaching arc at a glance." },
-              { icon: "🌍", title: "33 Languages",                desc: "Generate complete sermons in English, Spanish, French, Samoan, Tongan, Te Reo Māori, Swahili, Arabic, Mandarin and more." },
-              { icon: "🌱", title: "3 Skill Levels",              desc: "Beginner, Intermediate, and Advanced — the sermon depth, language, and theology adjusts to match your congregation." },
-              { icon: "📄", title: "PDF Export",                  desc: "Export your full sermon manuscript as a clean, formatted PDF. Print it, share it, archive it." },
-            ].map((f, i) => (
-              <div key={i} className="glass" style={{ padding: "18px 20px", borderRadius: "12px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
-                <span style={{ fontSize: "22px", flexShrink: 0 }}>{f.icon}</span>
-                <div>
-                  <h3 className="font-serif" style={{ color: "#fef3c7", fontSize: "15px", marginBottom: "4px" }}>{f.title}</h3>
-                  <p style={{ color: "#78716c", fontSize: "13px", lineHeight: 1.6 }}>{f.desc}</p>
+        {/* ── DASHBOARD TAB ── */}
+        {activeTab === "dashboard" && stats && (
+          <div>
+            {/* Stat cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "16px", marginBottom: "28px" }}>
+              {[
+                { label: "Total Users",   value: stats.totalUsers,   icon: "👥" },
+                { label: "Total Sermons", value: stats.totalSermons, icon: "📖" },
+                { label: "Total Series",  value: stats.totalSeries,  icon: "📚" },
+                { label: "Page Views",    value: Object.values(stats.viewsByDay).reduce((a, b) => a + b, 0), icon: "👁", sub: "last 7 days" },
+              ].map((s) => (
+                <div key={s.label} style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.1)", borderRadius: "12px", padding: "20px" }}>
+                  <p style={{ fontSize: "24px", marginBottom: "8px" }}>{s.icon}</p>
+                  <p style={{ color: "#f59e0b", fontSize: "28px", fontWeight: 700 }}>{s.value}</p>
+                  <p style={{ color: "#57534e", fontSize: "12px" }}>{s.label}</p>
+                  {s.sub && <p style={{ color: "#3d3529", fontSize: "11px" }}>{s.sub}</p>}
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
 
-        {/* Who it's for */}
-        <section style={{ padding: "40px 20px", maxWidth: "600px", margin: "0 auto", position: "relative", zIndex: 10 }}>
-          <h2 className="font-serif" style={{ textAlign: "center", fontSize: "26px", color: "#fef3c7", marginBottom: "28px" }}>
-            Built for Every Minister
-          </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            {[
-              { icon: "🌱", title: "New Pastors",        desc: "Step-by-step structure and 300+ topic suggestions to help you find your voice." },
-              { icon: "⛪", title: "Senior Ministers",   desc: "Deep theological content, Greek/Hebrew insights, and advanced doctrinal depth." },
-              { icon: "👨‍👩‍👧", title: "Youth Leaders",    desc: "Engaging, relatable sermons shaped for a younger audience and tone." },
-              { icon: "🌍", title: "Global Pastors",    desc: "Sermon content in 33 languages for ministry across the world." },
-              { icon: "📖", title: "Bible Teachers",    desc: "Scripture-rich content with cross-references and foundational context." },
-              { icon: "🔥", title: "Evangelists",       desc: "Powerful altar calls, salvation prayers, and outreach-focused sermon flow." },
-            ].map((w, i) => (
-              <div key={i} className="glass" style={{ padding: "16px", borderRadius: "12px" }}>
-                <span style={{ fontSize: "20px", display: "block", marginBottom: "8px" }}>{w.icon}</span>
-                <h3 style={{ color: "#fef3c7", fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>{w.title}</h3>
-                <p style={{ color: "#57534e", fontSize: "12px", lineHeight: 1.5 }}>{w.desc}</p>
+            {/* Traffic chart */}
+            <div style={{ background: "rgba(245,158,11,0.03)", border: "1px solid rgba(245,158,11,0.08)", borderRadius: "12px", padding: "20px", marginBottom: "24px" }}>
+              <p style={{ color: "#a8956e", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "20px" }}>Page Views — Last 7 Days</p>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: "100px" }}>
+                {Object.entries(stats.viewsByDay).map(([day, count]) => (
+                  <div key={day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                    <p style={{ color: "#f59e0b", fontSize: "11px" }}>{count}</p>
+                    <div style={{ width: "100%", background: "rgba(245,158,11,0.6)", borderRadius: "4px 4px 0 0", height: `${Math.max((count / maxViews) * 80, 4)}px`, transition: "height 0.3s" }} />
+                    <p style={{ color: "#57534e", fontSize: "10px", whiteSpace: "nowrap" }}>{day}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
 
-        {/* Sermon flow */}
-        <section style={{ padding: "40px 20px", maxWidth: "560px", margin: "0 auto", position: "relative", zIndex: 10 }}>
-          <h2 className="font-serif" style={{ textAlign: "center", fontSize: "24px", color: "#fef3c7", marginBottom: "24px" }}>
-            The Complete Sermon Flow
-          </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            {[
-              ["1", "Anchor Scripture",  "The verse everything returns to"],
-              ["2", "Opening",           "Greeting, atmosphere, hook"],
-              ["3", "Foundation",        "Scripture context and breakdown"],
-              ["4", "Foreword",          "Why this message matters today"],
-              ["5", "Core Teaching",     "3 points with scripture and application"],
-              ["6", "Ministry Flow",     "Knowledge, impartation, reflection"],
-              ["7", "Return to Anchor",  "Full circle — back to the Word"],
-              ["8", "Altar Call",        "Invitation and guided prayer"],
-              ["9", "Closing Prayer",    "Blessing and send-off"],
-            ].map(([num, title, sub], i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "12px 16px", background: i === 0 ? "rgba(245,158,11,0.06)" : "rgba(255,255,255,0.02)", border: `1px solid ${i === 0 ? "rgba(245,158,11,0.18)" : "rgba(245,158,11,0.05)"}`, borderRadius: "8px" }}>
-                <span style={{ width: "24px", height: "24px", borderRadius: "50%", background: i === 0 ? "rgba(245,158,11,0.2)" : "rgba(245,158,11,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "#f59e0b", flexShrink: 0 }}>{num}</span>
-                <div>
-                  <span style={{ color: i === 0 ? "#fbbf24" : "#fef3c7", fontWeight: 500, fontSize: "14px" }}>{title}</span>
-                  <span style={{ color: "#57534e", fontSize: "12px", marginLeft: "10px" }}>{sub}</span>
+            {/* Two columns */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              {/* Recent users */}
+              <div style={{ background: "rgba(245,158,11,0.03)", border: "1px solid rgba(245,158,11,0.08)", borderRadius: "12px", padding: "20px" }}>
+                <p style={{ color: "#a8956e", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "16px" }}>Recent Sign-Ups</p>
+                {stats.recentUsers.map((u, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(245,158,11,0.05)" }}>
+                    <p style={{ color: "#fef3c7", fontSize: "13px" }}>{u.email}</p>
+                    <p style={{ color: "#57534e", fontSize: "11px" }}>{new Date(u.created_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent sermons */}
+              <div style={{ background: "rgba(245,158,11,0.03)", border: "1px solid rgba(245,158,11,0.08)", borderRadius: "12px", padding: "20px" }}>
+                <p style={{ color: "#a8956e", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: "16px" }}>Recent Sermons</p>
+                {stats.recentSermons.map((s, i) => (
+                  <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid rgba(245,158,11,0.05)" }}>
+                    <p style={{ color: "#fef3c7", fontSize: "13px", marginBottom: "2px" }}>{s.title}</p>
+                    <p style={{ color: "#57534e", fontSize: "11px" }}>{s.tone} · {s.audience} · {new Date(s.created_at).toLocaleDateString()}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── USERS TAB ── */}
+        {activeTab === "users" && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+              <p style={{ color: "#a8956e", fontSize: "14px" }}>{users.length} total users</p>
+              <input
+                type="text"
+                placeholder="Search by email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ padding: "9px 14px", borderRadius: "8px", fontSize: "13px", width: "240px" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {filteredUsers.map((u) => (
+                <div key={u.id} style={{ background: u.is_banned ? "rgba(239,68,68,0.05)" : "rgba(245,158,11,0.03)", border: `1px solid ${u.is_banned ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.08)"}`, borderRadius: "10px", padding: "16px 18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
+                        <p style={{ color: "#fef3c7", fontSize: "14px", fontWeight: 500 }}>{u.email}</p>
+                        {u.is_banned && <span style={{ padding: "2px 8px", borderRadius: "10px", background: "rgba(239,68,68,0.15)", color: "#f87171", fontSize: "11px" }}>BANNED</span>}
+                        {u.email === ADMIN_EMAIL && <span style={{ padding: "2px 8px", borderRadius: "10px", background: "rgba(245,158,11,0.15)", color: "#f59e0b", fontSize: "11px" }}>ADMIN</span>}
+                      </div>
+                      <p style={{ color: "#57534e", fontSize: "12px" }}>
+                        {u.sermon_count} sermons · Joined {new Date(u.created_at).toLocaleDateString()}
+                      </p>
+                      {u.ban_reason && <p style={{ color: "#f87171", fontSize: "12px", marginTop: "4px" }}>Reason: {u.ban_reason}</p>}
+                    </div>
+
+                    {u.email !== ADMIN_EMAIL && (
+                      <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                        {u.is_banned ? (
+                          <button onClick={() => banUser(u.id, false)} style={{ padding: "7px 14px", borderRadius: "6px", fontSize: "12px", background: "transparent", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80", cursor: "pointer" }}>
+                            Unban
+                          </button>
+                        ) : (
+                          <button onClick={() => setBanTarget(banTarget === u.id ? null : u.id)} style={{ padding: "7px 14px", borderRadius: "6px", fontSize: "12px", background: "transparent", border: "1px solid rgba(245,158,11,0.2)", color: "#a8956e", cursor: "pointer" }}>
+                            Ban
+                          </button>
+                        )}
+                        <button onClick={() => deleteUser(u.id)} style={{ padding: "7px 14px", borderRadius: "6px", fontSize: "12px", background: "transparent", border: "1px solid rgba(239,68,68,0.25)", color: "#f87171", cursor: "pointer" }}>
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Ban reason input */}
+                  {banTarget === u.id && (
+                    <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
+                      <input
+                        type="text"
+                        placeholder="Reason for ban (optional)"
+                        value={banReason}
+                        onChange={(e) => setBanReason(e.target.value)}
+                        style={{ flex: 1, padding: "8px 12px", borderRadius: "6px", fontSize: "13px" }}
+                      />
+                      <button onClick={() => banUser(u.id, true)} style={{ padding: "8px 16px", borderRadius: "6px", fontSize: "13px", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", cursor: "pointer" }}>
+                        Confirm Ban
+                      </button>
+                      <button onClick={() => setBanTarget(null)} style={{ padding: "8px 12px", borderRadius: "6px", fontSize: "13px", background: "transparent", border: "1px solid rgba(245,158,11,0.1)", color: "#57534e", cursor: "pointer" }}>
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </section>
-
-        {/* FAQ — SEO rich */}
-        <section style={{ padding: "40px 20px", maxWidth: "600px", margin: "0 auto", position: "relative", zIndex: 10 }}>
-          <h2 className="font-serif" style={{ textAlign: "center", fontSize: "24px", color: "#fef3c7", marginBottom: "28px" }}>
-            Frequently Asked Questions
-          </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            {[
-              { q: "Is The Pastors Helper free to use?",                              a: "Yes — free to get started with just your email address. No password, no credit card required." },
-              { q: "Are the sermons unique to each pastor?",                          a: "Yes. Every sermon is freshly generated. Two pastors using the same topic will receive completely different sermons — different illustrations, angles, and ministry flow. All saved sermons are private to each user." },
-              { q: "What languages does it support?",                                 a: "33 languages including English, Spanish, French, Portuguese, Samoan, Tongan, Fijian, Te Reo Māori, Tok Pisin, Swahili, Yoruba, Igbo, Arabic, Hindi, Mandarin, Korean, Japanese, Russian, and more." },
-              { q: "Is it suitable for new pastors?",                                 a: "Absolutely. The Beginner level uses simple clear language with relatable examples. The 300+ topic library also helps new ministers find direction quickly." },
-              { q: "Can I save and reuse my sermons?",                                a: "Yes. Every sermon can be saved to your personal library, re-opened any time, preached from in Preach Mode, exported as a PDF, and organised into multi-week series." },
-              { q: "What is included in a generated sermon?",                         a: "Every sermon includes an Anchor Scripture, Opening, Foundation, Foreword, 3 Core Teaching Points with application, Ministry Flow (Gift of Knowledge, Impartation, Edification, Slow Down, Return to Anchor), Summary, Altar Call with guided prayer, and Closing Prayer." },
-              { q: "Can I build a multi-week sermon series?",                         a: "Yes. The Sermon Series Builder lets you create named series, assign sermons week by week, and view the full arc at a glance." },
-            ].map((faq, i) => (
-              <details key={i} style={{ padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(245,158,11,0.08)", borderRadius: "10px", cursor: "pointer" }}>
-                <summary style={{ color: "#fef3c7", fontSize: "14px", fontWeight: 500, listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-                  {faq.q}
-                  <span style={{ color: "#f59e0b", fontSize: "16px", flexShrink: 0 }}>+</span>
-                </summary>
-                <p style={{ color: "#a8956e", fontSize: "13px", lineHeight: 1.7, marginTop: "12px" }}>{faq.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section style={{ padding: "40px 20px 100px", textAlign: "center", position: "relative", zIndex: 10 }}>
-          <div className="glass gold-glow" style={{ maxWidth: "480px", margin: "0 auto", padding: "40px 24px", borderRadius: "16px" }}>
-            <div style={{ fontSize: "36px", marginBottom: "16px" }}>✝</div>
-            <h2 className="font-serif" style={{ fontSize: "24px", color: "#fef3c7", marginBottom: "12px" }}>Ready to Preach the Word?</h2>
-            <p style={{ color: "#a8956e", marginBottom: "28px", lineHeight: 1.7, fontSize: "14px" }}>
-              Join pastors and ministers worldwide building Spirit-led sermons with The Pastors Helper.
-            </p>
-            <Link href="/login" className="btn-gold" style={{ padding: "14px 36px", borderRadius: "8px", fontSize: "15px", textDecoration: "none", display: "block", textAlign: "center" as const }}>
-              Get Started Free →
-            </Link>
-            <p style={{ color: "#57534e", fontSize: "12px", marginTop: "14px" }}>No credit card · No password · Just your email</p>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer style={{ padding: "24px 20px", borderTop: "1px solid rgba(245,158,11,0.07)", textAlign: "center", position: "relative", zIndex: 10 }}>
-          <p style={{ color: "#57534e", fontSize: "13px", marginBottom: "6px" }}>✝ The Pastors Helper</p>
-          <p style={{ color: "#3d3529", fontSize: "12px", fontStyle: "italic", fontFamily: "Georgia, serif" }}>
-            &ldquo;Study to shew thyself approved unto God, a workman that needeth not to be ashamed, rightly dividing the word of truth.&rdquo; — 2 Timothy 2:15
-          </p>
-          <div style={{ marginTop: "16px", display: "flex", justifyContent: "center", gap: "20px", flexWrap: "wrap" }}>
-            {["Sermon Builder", "Sermon Topics", "Preach Mode", "Series Builder", "33 Languages", "PDF Export"].map(l => (
-              <span key={l} style={{ color: "#3d3529", fontSize: "11px" }}>{l}</span>
-            ))}
-          </div>
-        </footer>
+        )}
       </main>
-    </>
+    </div>
   );
 }
