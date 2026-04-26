@@ -10,90 +10,127 @@ export async function POST(req: Request) {
   const targetLanguage = language || "English";
 
   const levelInstructions: Record<string, string> = {
-    beginner:     "Beginner level — simple everyday words, no jargon, short relatable sentences, one clear idea per point. Perfect for new believers and new pastors.",
-    intermediate: "Intermediate level — include historical context, reference original word meanings simply, connect Old and New Testament. For growing believers.",
-    advanced:     "Advanced level — use theological precision, include one key Greek or Hebrew word insight per point, make cross-testament connections. For mature ministers.",
+    beginner: `BEGINNER LEVEL — Write for new believers and new pastors.
+- Use simple everyday language. No theological jargon.
+- Every teaching point MUST include at least 2 scripture references.
+- Foundation and Foreword MUST each reference at least 1 scripture.
+- Ministry Flow MUST reference the anchor scripture and at least 1 supporting scripture.
+- Altar Call MUST include a scripture promise (e.g. Romans 10:9, John 3:16).
+- Closing Prayer MUST include a scripture blessing (e.g. Numbers 6:24-26, Ephesians 3:20).
+- Use KJV or NKJV scripture text. Format: "Reference — verse text".`,
+
+    intermediate: `INTERMEDIATE LEVEL — Write for growing believers with some Bible knowledge.
+- Every teaching point MUST include 2-3 scripture references with verse text quoted.
+- Connect Old Testament to New Testament in at least one teaching point.
+- Foundation MUST include historical context AND 2 scriptures.
+- Ministry Flow MUST weave in 2-3 scriptures organically.
+- Include at least one cross-reference that deepens the anchor scripture.
+- Altar Call MUST include 2 scripture promises.
+- Closing Prayer MUST include a scripture blessing.
+- Reference Greek or Hebrew word meaning for at least one key word.`,
+
+    advanced: `ADVANCED LEVEL — Write for mature ministers and theologians.
+- Every teaching point MUST include 3-4 scripture references with verse text.
+- Each point must show cross-testament connections (OT + NT).
+- Include Greek or Hebrew word insights for key terms in each point.
+- Foundation MUST be rich with historical, cultural and covenant context plus 3 scriptures.
+- Ministry Flow MUST be deeply prophetic and grounded in 3-4 scriptures.
+- The Return to Anchor must show how the whole Bible points to this truth.
+- Altar Call MUST include 3 scripture promises with verse text.
+- Closing Prayer MUST be a scripture-woven blessing (weave actual verses into the prayer).
+- Reference at least one typological connection (e.g. OT foreshadowing NT).`,
+  };
+
+  const languageStyleMap: Record<string, string> = {
+    "Bislama": "Write in Bislama — the Creole language of Vanuatu. Mix Bislama with English where needed.",
+    "South Sea Islander": "Write in South Sea Islander English — warm, community-focused, deeply faith-rooted. Simple, heartfelt, communal tone.",
+    "Pacific Islander English": "Write in Pacific Islander English — warm storytelling style, communal values, family-centred illustrations.",
+    "Pitjantjatjara": "Write in Pitjantjatjara language where possible, mixing with English for scripture references.",
+    "Kriol": "Write in Kriol — the Northern Australian Aboriginal Creole. Use Kriol vocabulary and structure.",
+    "Aboriginal English": "Write in Aboriginal English — a distinct dialect with unique rhythm, vocabulary and cultural expression.",
   };
 
   const levelText = levelInstructions[level || "beginner"];
-  // Special handling for Pacific/Islander varieties
-  const languageStyleMap: Record<string, string> = {
-    "Bislama": "Bislama — the Creole language of Vanuatu. Use simple Bislama phrases and structure where possible, mixing with English where needed.",
-    "South Sea Islander": "South Sea Islander English — warm, community-focused, deeply faith-rooted language style used by South Sea Islander communities in Australia and the Pacific. Simple, heartfelt, communal tone.",
-    "Pacific Islander English": "Pacific Islander English — warm, storytelling style, deeply rooted in faith and community. Use accessible English with Pacific cultural references, communal values, and family-centred illustrations.",
-  };
-
   const langInstruction = targetLanguage !== "English"
     ? languageStyleMap[targetLanguage]
-      ? `\n${languageStyleMap[targetLanguage]}`
-      : `\nWrite ALL sermon content in ${targetLanguage}. Scripture references stay in standard format (e.g. John 3:16) but all other content must be in ${targetLanguage}.`
+      ? `\nLANGUAGE: ${languageStyleMap[targetLanguage]}`
+      : `\nLANGUAGE: Write ALL sermon content in ${targetLanguage}. Scripture references stay in standard format (e.g. John 3:16) but all other text must be in ${targetLanguage}.`
     : "";
 
-  const systemPrompt = `You are a Spirit-led sermon builder. Output ONLY valid JSON — no markdown, no backticks, no explanation. Start with { and end with }. CRITICAL: Every single field in the JSON must be completed. Never stop generating before the closing brace. Keep every field to exactly 1-2 sentences so the full sermon fits within the response.`;
+  const systemPrompt = `You are a Scripture-rich sermon builder. You output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }. Every field must be complete. Scripture references must include the actual verse text, not just the reference.`;
 
-  const userPrompt = `Create a unique Spirit-led sermon on: "${topic}"
-Audience: ${audience} | Tone: ${tone} | ${levelText}${langInstruction}
+  const userPrompt = `Create a unique, Scripture-rich sermon on: "${topic}"
+Audience: ${audience} | Tone: ${tone}
+${levelText}${langInstruction}
 
-IMPORTANT: Keep EVERY field to 1-2 SHORT sentences. This ensures all sections complete fully.
+CRITICAL SCRIPTURE RULE: Every section must contain actual scripture verse text, not just references.
+Format all scriptures as: "Book Chapter:Verse — verse text here"
 
-Return this complete JSON — all fields required, none can be empty:
+Return this complete JSON — ALL fields required:
 
 {
-  "title": "sermon title",
-  "alternativeTitles": ["alt 1", "alt 2"],
+  "title": "compelling sermon title",
+  "alternativeTitles": ["alt title 1", "alt title 2"],
   "anchorScripture": {
     "reference": "Book Chapter:Verse",
-    "kjv": "KJV verse text",
-    "nkjv": "NKJV verse text"
+    "kjv": "Full KJV verse text",
+    "nkjv": "Full NKJV verse text"
   },
-  "theme": "one sentence core theme",
+  "theme": "one sentence core revelation rooted in the scripture",
   "opening": {
-    "greeting": "1 sentence greeting",
-    "hook": "1 sentence relatable hook"
+    "greeting": "warm opening greeting that references the anchor scripture",
+    "hook": "relatable hook that connects to the theme with a scripture anchor"
   },
   "foundation": {
-    "context": "1-2 sentences context",
-    "breakdown": "1-2 sentences breakdown"
+    "context": "historical and spiritual context of the scripture with supporting verse",
+    "breakdown": "verse-by-verse breakdown with additional scripture cross-reference"
   },
   "foreword": {
-    "whyItMatters": "1-2 sentences",
-    "relatable": "1-2 sentences illustration"
+    "whyItMatters": "why this message matters today, grounded in a scripture promise",
+    "relatable": "relatable illustration that connects back to the scripture"
   },
   "teachingPoints": [
     {
       "title": "Point 1 title",
-      "scripture": "scripture ref — verse text",
-      "explanation": "1-2 sentences explanation",
-      "application": "1 sentence application"
+      "scripture": "Primary scripture — full verse text",
+      "supportingScriptures": ["Second scripture — verse text", "Third scripture — verse text"],
+      "explanation": "explanation that weaves the scriptures together",
+      "application": "practical application grounded in scripture promise"
     },
     {
       "title": "Point 2 title",
-      "scripture": "scripture ref — verse text",
-      "explanation": "1-2 sentences explanation",
-      "application": "1 sentence application"
+      "scripture": "Primary scripture — full verse text",
+      "supportingScriptures": ["Second scripture — verse text", "Third scripture — verse text"],
+      "explanation": "explanation that weaves the scriptures together",
+      "application": "practical application grounded in scripture promise"
     },
     {
       "title": "Point 3 title",
-      "scripture": "scripture ref — verse text",
-      "explanation": "1-2 sentences explanation",
-      "application": "1 sentence application"
+      "scripture": "Primary scripture — full verse text",
+      "supportingScriptures": ["Second scripture — verse text", "Third scripture — verse text"],
+      "explanation": "explanation that weaves the scriptures together",
+      "application": "practical application grounded in scripture promise"
     }
   ],
   "ministryFlow": {
-    "giftOfKnowledge": "1 sentence prophetic word",
-    "impartation": "1 sentence activation",
-    "edification": "1 sentence encouragement",
-    "slowDown": "1 sentence reflective pause",
-    "returnToAnchor": "1 sentence return to anchor scripture"
+    "giftOfKnowledge": "prophetic word grounded in a scripture (include reference)",
+    "impartation": "impartation language with a scripture promise spoken over the congregation",
+    "edification": "words of encouragement woven with scripture",
+    "slowDown": "reflective pause — read a scripture slowly and let it settle",
+    "returnToAnchor": "return to anchor scripture showing the full circle of the message"
   },
   "summary": {
-    "keyTakeaways": ["takeaway 1", "takeaway 2", "takeaway 3"]
+    "keyTakeaways": [
+      "Takeaway 1 with supporting scripture reference",
+      "Takeaway 2 with supporting scripture reference",
+      "Takeaway 3 with supporting scripture reference"
+    ]
   },
   "altarCall": {
-    "invitation": "1-2 sentences invitation",
-    "prayer": "1-2 sentences guided prayer"
+    "invitation": "heartfelt invitation grounded in a scripture promise",
+    "prayer": "guided prayer that weaves scripture into the words spoken"
   },
-  "closingPrayer": "1-2 sentences closing blessing"
+  "closingPrayer": "blessing prayer that weaves actual scripture verses into the words"
 }`;
 
   try {
@@ -131,98 +168,81 @@ Return this complete JSON — all fields required, none can be empty:
 
     console.log("Raw length:", rawText.length);
     console.log("Stop reason:", data.stop_reason);
-    console.log("First 80:", rawText.slice(0, 80));
-    console.log("Last 80:", rawText.slice(-80));
 
-    // Clean markdown fences
-    let cleaned = rawText
-      .replace(/^```json\s*/gi, "")
-      .replace(/^```\s*/gi, "")
-      .replace(/```\s*$/gi, "")
+    const cleaned = rawText
+      .replace(/```json\s*/gi, "")
+      .replace(/```\s*/gi, "")
       .trim();
 
     const start = cleaned.indexOf("{");
     if (start === -1) {
-      console.error("No opening brace. Raw:", rawText.slice(0, 400));
-      return NextResponse.json(
-        { error: "No sermon content returned. Please try again." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "No sermon content returned. Please try again." }, { status: 500 });
     }
 
     const end = cleaned.lastIndexOf("}");
-    let jsonString = end > start
-      ? cleaned.slice(start, end + 1)
-      : cleaned.slice(start);
+    let jsonString = end > start ? cleaned.slice(start, end + 1) : cleaned.slice(start);
 
-    // Attempt parse
     let sermon: Record<string, unknown> | null = null;
-
     try {
       sermon = JSON.parse(jsonString);
     } catch {
-      // Repair truncated JSON
       console.warn("Parse failed — repairing JSON");
       const repaired = repairJson(jsonString);
       try {
         sermon = JSON.parse(repaired);
-        console.log("Repair succeeded");
       } catch {
-        console.error("Repair failed. JSON:", jsonString.slice(0, 800));
-        return NextResponse.json(
-          { error: "Sermon could not be read. Please try again." },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "Sermon could not be read. Please try again." }, { status: 500 });
       }
     }
 
     if (!sermon) {
-      return NextResponse.json(
-        { error: "Empty sermon returned. Please try again." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Empty sermon returned. Please try again." }, { status: 500 });
     }
 
-    // Fill any missing sections with fallbacks so nothing renders empty
+    // Ensure all fields exist with fallbacks
     sermon.title = sermon.title || topic;
     sermon.alternativeTitles = (sermon.alternativeTitles as unknown[]) || [];
     sermon.theme = sermon.theme || "";
 
+    // Ensure teaching points have supportingScriptures
+    const points = (sermon.teachingPoints as Record<string, unknown>[]) || [];
+    sermon.teachingPoints = points.map(p => ({
+      ...p,
+      supportingScriptures: (p.supportingScriptures as string[]) || [],
+    }));
+
     const mf = (sermon.ministryFlow as Record<string, string>) || {};
     sermon.ministryFlow = {
-      giftOfKnowledge: mf.giftOfKnowledge || "The Spirit is moving — receive what God has for you right now.",
-      impartation:     mf.impartation     || "Receive fresh fire and anointing for your calling.",
-      edification:     mf.edification     || "You are loved, chosen, and equipped by God for this season.",
-      slowDown:        mf.slowDown        || "Take a moment — let the Word settle deep in your spirit.",
-      returnToAnchor:  mf.returnToAnchor  || `Return to the anchor — this is what God says about ${topic}.`,
+      giftOfKnowledge: mf.giftOfKnowledge || "The Lord says: I know the plans I have for you — plans to prosper you and not to harm you. (Jeremiah 29:11)",
+      impartation: mf.impartation || "Receive strength for your calling. As Isaiah 40:31 declares — they that wait upon the Lord shall renew their strength.",
+      edification: mf.edification || "You are fearfully and wonderfully made. (Psalm 139:14) God is not finished with you.",
+      slowDown: mf.slowDown || "Be still and know that I am God. (Psalm 46:10) Let that settle in your spirit right now.",
+      returnToAnchor: mf.returnToAnchor || `Return to the Word — this is what God says about ${topic}.`,
     };
 
     const sum = (sermon.summary as Record<string, unknown>) || {};
     sermon.summary = {
       keyTakeaways: (sum.keyTakeaways as string[]) || [
-        `God's Word on ${topic} is alive and active today.`,
-        "What you received today is meant to be lived, not just heard.",
-        "Take one step of faith this week based on this message.",
+        `God's Word on ${topic} is alive and active. (Hebrews 4:12)`,
+        "What you received today is meant to be lived, not just heard. (James 1:22)",
+        "Step out in faith — for God has not given us a spirit of fear. (2 Timothy 1:7)",
       ],
     };
 
     const ac = (sermon.altarCall as Record<string, string>) || {};
     sermon.altarCall = {
-      invitation: ac.invitation || "If this Word has touched your heart today, respond to God right now.",
-      prayer:     ac.prayer     || "Lord, I receive Your Word into my heart. Transform me by Your truth. In Jesus' name, Amen.",
+      invitation: ac.invitation || "If you confess with your mouth and believe in your heart that God raised Jesus from the dead, you will be saved. (Romans 10:9) Come to Him today.",
+      prayer: ac.prayer || "Lord Jesus, I confess You as my Lord and Saviour. I believe You died for me and rose again. I receive Your forgiveness and the gift of eternal life. Amen.",
     };
 
     sermon.closingPrayer = (sermon.closingPrayer as string) ||
-      "May the God of peace sanctify you wholly — spirit, soul, and body — until the coming of our Lord Jesus Christ. Amen.";
+      "May the Lord bless you and keep you — may He make His face shine upon you and be gracious to you. (Numbers 6:24-25) Go in the peace and power of His Word. Amen.";
 
     return NextResponse.json({ sermon });
 
   } catch (err) {
     console.error("Route error:", err);
-    return NextResponse.json(
-      { error: "Server error. Please try again." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server error. Please try again." }, { status: 500 });
   }
 }
 
@@ -230,7 +250,6 @@ function repairJson(str: string): string {
   let result = str.replace(/,\s*$/, "");
   let braces = 0, brackets = 0;
   let inString = false, escape = false;
-
   for (const ch of result) {
     if (escape) { escape = false; continue; }
     if (ch === "\\" && inString) { escape = true; continue; }
@@ -241,10 +260,8 @@ function repairJson(str: string): string {
     if (ch === "[") brackets++;
     if (ch === "]") brackets--;
   }
-
   if (inString) result += '"';
   for (let i = 0; i < brackets; i++) result += "]";
   for (let i = 0; i < braces; i++) result += "}";
-
   return result;
 }
