@@ -152,7 +152,7 @@ export default function Home() {
             Build complete, Scripture-anchored sermons in seconds — with teaching points, ministry flow, altar calls, and preach mode.
           </p>
           <p style={{ color: "#78716c", fontSize: "14px", marginBottom: "36px" }}>
-            For pastors at every level · 33 languages · Beginner to Advanced
+            For pastors at every level · 36+ languages · Beginner to Advanced
           </p>
 
           <Link href="/login" className="btn-gold" style={{ padding: "15px 36px", borderRadius: "8px", fontSize: "16px", textDecoration: "none", display: "block", maxWidth: "300px", margin: "0 auto 16px", textAlign: "center" as const }}>
@@ -170,13 +170,63 @@ export default function Home() {
           <div style={{ maxWidth: "600px", margin: "0 auto", display: "flex", justifyContent: "center", gap: "32px", flexWrap: "wrap" }}>
             {[
               { num: "300+", label: "Sermon Topics" },
-              { num: "33",   label: "Languages" },
+              { num: "36+",  label: "Languages" },
               { num: "9",    label: "Sermon Sections" },
               { num: "3",    label: "Skill Levels" },
             ].map((s) => (
               <div key={s.label} style={{ textAlign: "center" }}>
                 <p className="font-serif" style={{ color: "#f59e0b", fontSize: "26px", fontWeight: 700 }}>{s.num}</p>
                 <p style={{ color: "#57534e", fontSize: "12px" }}>{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Languages strip */}
+        <section style={{ padding: "8px 20px 32px", maxWidth: "700px", margin: "0 auto", position: "relative", zIndex: 10 }}>
+          <p style={{ color: "#57534e", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", textAlign: "center", marginBottom: "14px" }}>Ministry Languages — All Free</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
+            {[
+              { flag: "🇬🇧", label: "English" },
+              { flag: "🇪🇸", label: "Español" },
+              { flag: "🇫🇷", label: "Français" },
+              { flag: "🇧🇷", label: "Português" },
+              { flag: "🇩🇪", label: "Deutsch" },
+              { flag: "🇮🇹", label: "Italiano" },
+              { flag: "🇳🇱", label: "Nederlands" },
+              { flag: "🇿🇦", label: "Afrikaans" },
+              { flag: "🇿🇦", label: "IsiZulu" },
+              { flag: "🇰🇪", label: "Kiswahili" },
+              { flag: "🇳🇬", label: "Yorùbá" },
+              { flag: "🇳🇬", label: "Igbo" },
+              { flag: "🇳🇬", label: "Hausa" },
+              { flag: "🇪🇹", label: "Amharic" },
+              { flag: "🇸🇦", label: "Arabic" },
+              { flag: "🇮🇳", label: "Hindi" },
+              { flag: "🇮🇳", label: "Tamil" },
+              { flag: "🇮🇳", label: "Telugu" },
+              { flag: "🇵🇭", label: "Filipino" },
+              { flag: "🇮🇩", label: "Indonesia" },
+              { flag: "🇲🇾", label: "Malay" },
+              { flag: "🇨🇳", label: "中文" },
+              { flag: "🇰🇷", label: "한국어" },
+              { flag: "🇯🇵", label: "日本語" },
+              { flag: "🇷🇺", label: "Русский" },
+              { flag: "🇺🇦", label: "Українська" },
+              { flag: "🇷🇴", label: "Română" },
+              { flag: "🇵🇱", label: "Polski" },
+              { flag: "🇼🇸", label: "Samoa" },
+              { flag: "🇫🇯", label: "Fiji" },
+              { flag: "🇵🇬", label: "PNG" },
+              { flag: "🇳🇿", label: "Māori" },
+              { flag: "🇹🇴", label: "Tonga" },
+              { flag: "🇻🇺", label: "Vanuatu" },
+              { flag: "🌊", label: "S.Sea" },
+              { flag: "🇦🇺", label: "Aboriginal" },
+            ].map((l) => (
+              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 10px", borderRadius: "16px", background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.1)" }}>
+                <span style={{ fontSize: "16px" }}>{l.flag}</span>
+                <span style={{ color: "#78716c", fontSize: "11px" }}>{l.label}</span>
               </div>
             ))}
           </div>
@@ -196,7 +246,7 @@ export default function Home() {
               { icon: "🔥", title: "Deep Ministry Flow",          desc: "Gift of Knowledge, Impartation, Edification, Slow Down moments, and Return to Anchor — built for Spirit-led delivery." },
               { icon: "🎤", title: "Preach Mode",                 desc: "Full-screen delivery view designed for behind the pulpit. Large text, clean layout, section by section." },
               { icon: "📚", title: "Series Builder",              desc: "Create multi-week series, assign sermons week by week, and see your full teaching arc at a glance." },
-              { icon: "🌍", title: "33 Languages",                desc: "Generate complete sermons in English, Spanish, French, Samoan, Tongan, Te Reo Māori, Swahili, Arabic, Mandarin and more." },
+              { icon: "🌍", title: "36+ Languages",               desc: "🇬🇧 🇪🇸 🇫🇷 🇧🇷 🇩🇪 🇮🇹 🇳🇱 🇿🇦 🇰🇪 🇳🇬 🇪🇹 🇸🇦 🇮🇳 🇵🇭 🇮🇩 🇲🇾 🇨🇳 🇰🇷 🇯🇵 🇷🇺 🇺🇦 🇷🇴 🇵🇱 🇼🇸 🇫🇯 🇵🇬 🇳🇿 🇹🇴 🇻🇺 🇦🇺 — Every language free, no extra cost." },
               { icon: "🌱", title: "3 Skill Levels",              desc: "Beginner, Intermediate, and Advanced — the sermon depth, language, and theology adjusts to match your congregation." },
               { icon: "📄", title: "PDF Export",                  desc: "Export your full sermon manuscript as a clean, formatted PDF. Print it, share it, archive it." },
             ].map((f, i) => (
@@ -221,7 +271,7 @@ export default function Home() {
               { icon: "🌱", title: "New Pastors",        desc: "Step-by-step structure and 300+ topic suggestions to help you find your voice." },
               { icon: "⛪", title: "Senior Ministers",   desc: "Deep theological content, Greek/Hebrew insights, and advanced doctrinal depth." },
               { icon: "👨‍👩‍👧", title: "Youth Leaders",    desc: "Engaging, relatable sermons shaped for a younger audience and tone." },
-              { icon: "🌍", title: "Global Pastors",    desc: "Sermon content in 33 languages for ministry across the world." },
+              { icon: "🌍", title: "Global Pastors",    desc: "Sermon content in 36+ languages for ministry across the world." },
               { icon: "📖", title: "Bible Teachers",    desc: "Scripture-rich content with cross-references and foundational context." },
               { icon: "🔥", title: "Evangelists",       desc: "Powerful altar calls, salvation prayers, and outreach-focused sermon flow." },
             ].map((w, i) => (
