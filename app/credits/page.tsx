@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -57,7 +57,7 @@ const PACKS = [
 
 const CREDIT_COSTS = { beginner: 1, intermediate: 2, advanced: 3 };
 
-export default function CreditsPage() {
+function CreditsInner() {
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [credits, setCredits] = useState<{ balance: number; total_purchased: number; total_used: number; is_free_tier: boolean } | null>(null);
   const [transactions, setTransactions] = useState<{ type: string; amount: number; description: string; created_at: string }[]>([]);
@@ -296,5 +296,29 @@ export default function CreditsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function CreditsContent() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#0f0a05", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#f59e0b" }}>Loading...</p>
+      </div>
+    }>
+      <CreditsInner />
+    </Suspense>
+  );
+}
+
+export default function CreditsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100vh", background: "#0f0a05", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#f59e0b" }}>Loading...</p>
+      </div>
+    }>
+      <CreditsContent />
+    </Suspense>
   );
 }
