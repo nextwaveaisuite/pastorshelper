@@ -280,8 +280,7 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          {u.email !== ADMIN_EMAIL && (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                               {/* Action buttons */}
                               <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                                 {[
@@ -310,8 +309,7 @@ export default function AdminPage() {
                               <button onClick={() => adjustCredits(u.id)} style={{ padding: "11px", borderRadius: "8px", fontSize: "13px", fontWeight: 600, background: "rgba(74,222,128,0.12)", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80", cursor: "pointer" }}>
                                 ✓ Apply Credit Change
                               </button>
-                            </div>
-                          )}
+                          </div>
                         </div>
 
                         {/* USER DETAILS + BAN */}
@@ -348,8 +346,7 @@ export default function AdminPage() {
                           )}
 
                           {/* Ban controls */}
-                          {u.email !== ADMIN_EMAIL && (
-                            <div>
+                          <div>
                               {u.is_banned ? (
                                 <div>
                                   {u.ban_reason && <p style={{ color: "#f87171", fontSize: "11px", marginBottom: "8px" }}>Reason: {u.ban_reason}</p>}
@@ -369,7 +366,6 @@ export default function AdminPage() {
                                 </div>
                               )}
                             </div>
-                          )}
                         </div>
                       </div>
                     </div>
