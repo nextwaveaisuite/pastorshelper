@@ -61,15 +61,6 @@ export async function POST(req: Request) {
       usage: usageMap[u.id] || { topics: [], levels: {}, languages: [], lastActive: null },
     }));
 
-    // Ensure all users have a credit record
-    for (const u of authUsers) {
-      if (!creditsMap[u.id]) {
-        await supabase.from("user_credits").upsert({ user_id: u.id, balance: 10, is_free_tier: true }).catch(() => {});
-      }
-      // Ensure profile exists
-      await supabase.from("user_profiles").upsert({ id: u.id, email: u.email }).catch(() => {});
-    }
-
     return NextResponse.json({ users });
   } catch (e) {
     console.error("admin users error:", e);
