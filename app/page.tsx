@@ -204,7 +204,7 @@ export default function Home() {
               { icon: "🎤", title: "Preach Mode",                 desc: "Full-screen delivery view designed for behind the pulpit. Large text, clean layout, section by section." },
               { icon: "📚", title: "Series Builder",              desc: "Create multi-week series, assign sermons week by week, and see your full teaching arc at a glance." },
               { icon: "🌍", title: "36+ Languages",               desc: "🇬🇧 🇪🇸 🇫🇷 🇧🇷 🇩🇪 🇮🇹 🇳🇱 🇿🇦 🇰🇪 🇳🇬 🇪🇹 🇸🇦 🇮🇳 🇵🇭 🇮🇩 🇲🇾 🇨🇳 🇰🇷 🇯🇵 🇷🇺 🇺🇦 🇷🇴 🇵🇱 🇼🇸 🇫🇯 🇵🇬 🇳🇿 🇹🇴 🇻🇺 🇦🇺 — Every language free." },
-              { icon: "🌱", title: "3 Skill Levels",              desc: "Beginner, Intermediate, and Advanced — the sermon depth and theology adjusts to match your congregation." },
+              { icon: "🌱", title: "3 Ministry Levels",           desc: "Certificate · Diploma · Degree — each level aligns with recognised theological education standards to build the pastor, not just the sermon." },
               { icon: "📄", title: "PDF Export",                  desc: "Export your full sermon manuscript as a clean, formatted PDF. Print it, share it, archive it." },
             ].map((f, i) => (
               <div key={i} className="glass" style={{ padding: "18px 20px", borderRadius: "12px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
@@ -225,11 +225,11 @@ export default function Home() {
           </h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             {[
-              { icon: "🌱", title: "New Pastors",      desc: "Step-by-step structure and 300+ topic suggestions to help you find your voice." },
-              { icon: "⛪", title: "Senior Ministers", desc: "Deep theological content, Greek/Hebrew insights, and advanced doctrinal depth." },
+              { icon: "🌱", title: "New Pastors",      desc: "Certificate level sermons that teach you the craft of preaching while you preach. Every section models how ministry works." },
+              { icon: "⛪", title: "Senior Ministers", desc: "Degree level content with full exegesis, Greek/Hebrew word studies, covenant theology and systematic doctrine." },
               { icon: "👨‍👩‍👧", title: "Youth Leaders",  desc: "Engaging, relatable sermons shaped for a younger audience and tone." },
               { icon: "🌍", title: "Global Pastors",  desc: "Sermon content in 36+ languages for ministry across the world." },
-              { icon: "📖", title: "Bible Teachers",  desc: "Scripture-rich content with cross-references and foundational context." },
+              { icon: "📖", title: "Bible Teachers",  desc: "Diploma level — deep OT/NT connections, word studies, and the full counsel of Scripture brought to every message." },
               { icon: "🔥", title: "Evangelists",     desc: "Powerful altar calls, salvation prayers, and outreach-focused sermon flow." },
             ].map((w, i) => (
               <div key={i} className="glass" style={{ padding: "16px", borderRadius: "12px" }}>
