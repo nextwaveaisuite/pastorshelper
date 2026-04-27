@@ -542,7 +542,7 @@ export default function Dashboard() {
                     <Label>Sermon Tone</Label>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {TONES.map((t) => (
-                        <button key={t} onClick={() => { setTone(t); setActiveMode("sermon"); setPrayerType(""); }} style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "13px", border: "1px solid", borderColor: tone === t && activeMode === "sermon" ? "rgba(245,158,11,0.55)" : "rgba(245,158,11,0.13)", background: tone === t && activeMode === "sermon" ? "rgba(245,158,11,0.1)" : "transparent", color: tone === t && activeMode === "sermon" ? "#f59e0b" : "#78716c", cursor: "pointer", fontWeight: tone === t && activeMode === "sermon" ? 500 : 400 }}>
+                        <button key={t} onClick={() => { setTone(t); setActiveMode("sermon"); setPrayerType(""); }} style={{ padding: "11px 20px", borderRadius: "22px", fontSize: "14px", border: "1px solid", borderColor: tone === t && activeMode === "sermon" ? "rgba(245,158,11,0.55)" : "rgba(245,158,11,0.13)", background: tone === t && activeMode === "sermon" ? "rgba(245,158,11,0.1)" : "transparent", color: tone === t && activeMode === "sermon" ? "#f59e0b" : "#a8956e", cursor: "pointer", fontWeight: tone === t && activeMode === "sermon" ? 600 : 400 }}>
                           {t}
                         </button>
                       ))}
@@ -552,18 +552,18 @@ export default function Dashboard() {
 
                 {/* Card: Prayer Help */}
                 <div className="glass" style={{ borderRadius: "14px", padding: "20px", border: "1px solid rgba(139,92,246,0.15)" }}>
-                  <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "12px", fontWeight: 600 }}>🙏 Prayer Help</p>
+                  <p style={{ color: "#a78bfa", fontSize: "13px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "14px", fontWeight: 700 }}>🙏 Prayer Help</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
 
                     {/* General Prayer row */}
                     <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                      <button onClick={() => { setPrayerType("General Prayer"); setActiveMode("prayer"); setTone(""); setPrayerTopic(""); }} style={{ flexShrink: 0, padding: "10px 14px", borderRadius: "10px", border: "1px solid", borderColor: prayerType === "General Prayer" && activeMode === "prayer" ? "#a78bfa" : "rgba(139,92,246,0.2)", background: prayerType === "General Prayer" && activeMode === "prayer" ? "rgba(139,92,246,0.15)" : "transparent", color: prayerType === "General Prayer" && activeMode === "prayer" ? "#a78bfa" : "#78716c", cursor: "pointer", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
+                      <button onClick={() => { setPrayerType("General Prayer"); setActiveMode("prayer"); setTone(""); setPrayerTopic(""); }} style={{ flexShrink: 0, padding: "12px 18px", borderRadius: "10px", border: "1px solid", borderColor: prayerType === "General Prayer" && activeMode === "prayer" ? "#a78bfa" : "rgba(139,92,246,0.2)", background: prayerType === "General Prayer" && activeMode === "prayer" ? "rgba(139,92,246,0.15)" : "transparent", color: prayerType === "General Prayer" && activeMode === "prayer" ? "#a78bfa" : "#a78bfa", cursor: "pointer", fontSize: "14px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
                         🙏 General Prayer
                       </button>
                       <select
                         value={prayerType === "General Prayer" && activeMode === "prayer" ? prayerTopic : ""}
                         onChange={e => { setPrayerType("General Prayer"); setActiveMode("prayer"); setTone(""); setPrayerTopic(e.target.value); }}
-                        style={{ flex: 1, padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(139,92,246,0.2)", background: "#1a1209", color: prayerType === "General Prayer" && activeMode === "prayer" ? "#fef3c7" : "#57534e", fontSize: "13px", cursor: "pointer", outline: "none" }}
+                        style={{ flex: 1, padding: "12px 12px", borderRadius: "10px", border: "1px solid rgba(139,92,246,0.2)", background: "#1a1209", color: prayerType === "General Prayer" && activeMode === "prayer" ? "#fef3c7" : "#78716c", fontSize: "14px", cursor: "pointer", outline: "none" }}
                       >
                         <option value="">All Areas</option>
                         {GENERAL_PRAYER_TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -572,13 +572,13 @@ export default function Dashboard() {
 
                     {/* Warfare row */}
                     <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                      <button onClick={() => { setPrayerType("Warfare"); setActiveMode("prayer"); setTone(""); setPrayerTopic(""); }} style={{ flexShrink: 0, padding: "10px 14px", borderRadius: "10px", border: "1px solid", borderColor: prayerType === "Warfare" && activeMode === "prayer" ? "#a78bfa" : "rgba(139,92,246,0.2)", background: prayerType === "Warfare" && activeMode === "prayer" ? "rgba(139,92,246,0.15)" : "transparent", color: prayerType === "Warfare" && activeMode === "prayer" ? "#a78bfa" : "#78716c", cursor: "pointer", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
+                      <button onClick={() => { setPrayerType("Warfare"); setActiveMode("prayer"); setTone(""); setPrayerTopic(""); }} style={{ flexShrink: 0, padding: "12px 18px", borderRadius: "10px", border: "1px solid", borderColor: prayerType === "Warfare" && activeMode === "prayer" ? "#a78bfa" : "rgba(139,92,246,0.2)", background: prayerType === "Warfare" && activeMode === "prayer" ? "rgba(139,92,246,0.15)" : "transparent", color: prayerType === "Warfare" && activeMode === "prayer" ? "#a78bfa" : "#a78bfa", cursor: "pointer", fontSize: "14px", fontWeight: 600, whiteSpace: "nowrap" as const }}>
                         ⚔️ Warfare
                       </button>
                       <select
                         value={prayerType === "Warfare" && activeMode === "prayer" ? prayerTopic : ""}
                         onChange={e => { setPrayerType("Warfare"); setActiveMode("prayer"); setTone(""); setPrayerTopic(e.target.value); }}
-                        style={{ flex: 1, padding: "10px 12px", borderRadius: "10px", border: "1px solid rgba(139,92,246,0.2)", background: "#1a1209", color: prayerType === "Warfare" && activeMode === "prayer" ? "#fef3c7" : "#57534e", fontSize: "13px", cursor: "pointer", outline: "none" }}
+                        style={{ flex: 1, padding: "12px 12px", borderRadius: "10px", border: "1px solid rgba(139,92,246,0.2)", background: "#1a1209", color: prayerType === "Warfare" && activeMode === "prayer" ? "#fef3c7" : "#78716c", fontSize: "14px", cursor: "pointer", outline: "none" }}
                       >
                         <option value="">All Areas</option>
                         {WARFARE_TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
