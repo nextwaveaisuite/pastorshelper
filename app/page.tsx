@@ -182,12 +182,14 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Languages strip — flags only */}
+        {/* Languages strip */}
         <section style={{ padding: "8px 20px 32px", maxWidth: "680px", margin: "0 auto", position: "relative", zIndex: 10 }}>
           <p style={{ color: "#57534e", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", textAlign: "center", marginBottom: "16px" }}>Ministry Languages — All Free</p>
-          <p style={{ textAlign: "center", fontSize: "28px", lineHeight: 2, letterSpacing: "4px" }}>
-            🇬🇧🇪🇸🇫🇷🇧🇷🇩🇪🇮🇹🇳🇱🇿🇦🇿🇦🇰🇪🇳🇬🇳🇬🇳🇬🇪🇹🇸🇦🇮🇳🇮🇳🇮🇳🇵🇭🇮🇩🇲🇾🇨🇳🇰🇷🇯🇵🇷🇺🇺🇦🇷🇴🇵🇱🇼🇸🇫🇯🇵🇬🇳🇿🇹🇴🇻🇺🌊🇦🇺
-          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
+            {["English","Español","Français","Português","Deutsch","Italiano","Nederlands","Afrikaans","IsiZulu","Kiswahili","Yorùbá","Igbo","Hausa","Amharic","Arabic","Hindi","Tamil","Telugu","Filipino","Bahasa Indonesia","Malay","中文","한국어","日本語","Русский","Українська","Română","Polski","Samoan","Fijian","Tok Pisin","Māori","Tongan","Bislama","S. Sea Islander","Aboriginal English"].map(l => (
+              <span key={l} style={{ padding: "5px 12px", borderRadius: "16px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.12)", color: "#78716c", fontSize: "12px" }}>{l}</span>
+            ))}
+          </div>
         </section>
 
         {/* Features */}
