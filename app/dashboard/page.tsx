@@ -691,6 +691,82 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* Generated Prayer */}
+            {generatedPrayer && !generating && (() => {
+              const p = generatedPrayer as {
+                title?: string; type?: string;
+                openingDeclaration?: { text?: string; scripture?: string };
+                prayerSections?: { heading?: string; prayer?: string; scripture?: string; congregationalResponse?: string }[];
+                corporateDeclaration?: { instruction?: string; declaration?: string };
+                closingBlessing?: { text?: string; scripture?: string };
+              };
+              return (
+                <div className="animate-fade-in" style={{ marginBottom: "20px" }}>
+                  {/* Prayer header */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <div style={{ display: "flex", gap: "8px", marginBottom: "10px", flexWrap: "wrap", alignItems: "center" }}>
+                      <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 600, background: "rgba(139,92,246,0.12)", color: "#a78bfa" }}>
+                        {p.type === "Warfare" ? "⚔️ Warfare Prayer" : "🙏 General Prayer"}
+                      </span>
+                      {prayerTopic && <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", background: "rgba(139,92,246,0.08)", color: "#78716c" }}>{prayerTopic}</span>}
+                    </div>
+                    <h1 className="font-serif" style={{ color: "#fef3c7", fontSize: "22px", lineHeight: 1.3, marginBottom: "4px" }}>{p.title}</h1>
+                  </div>
+
+                  {/* Action row */}
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+                    <button onClick={() => setGeneratedPrayer(null)} style={{ padding: "9px 16px", borderRadius: "8px", fontSize: "13px", background: "transparent", border: "1px solid rgba(139,92,246,0.2)", color: "#a78bfa", cursor: "pointer" }}>
+                      ↺ New Prayer
+                    </button>
+                  </div>
+
+                  {/* Opening Declaration */}
+                  {p.openingDeclaration && (
+                    <div style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.18)", borderRadius: "12px", padding: "18px", marginBottom: "12px" }}>
+                      <p style={{ color: "#a78bfa", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "10px", fontWeight: 600 }}>Opening Declaration</p>
+                      <p style={{ color: "#fef3c7", fontSize: "14px", lineHeight: 1.85, marginBottom: "10px" }}>{p.openingDeclaration.text}</p>
+                      {p.openingDeclaration.scripture && <p style={{ color: "#a78bfa", fontSize: "12px", fontStyle: "italic" }}>✝ {p.openingDeclaration.scripture}</p>}
+                    </div>
+                  )}
+
+                  {/* Prayer Sections */}
+                  {(p.prayerSections || []).map((section, i) => (
+                    <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(139,92,246,0.1)", borderRadius: "12px", padding: "18px", marginBottom: "10px" }}>
+                      <p style={{ color: "#a78bfa", fontSize: "12px", fontWeight: 600, marginBottom: "10px" }}>
+                        {p.type === "Warfare" ? "⚔️" : "🙏"} {section.heading}
+                      </p>
+                      <p style={{ color: "#fef3c7", fontSize: "14px", lineHeight: 1.9, marginBottom: "10px" }}>{section.prayer}</p>
+                      {section.scripture && <p style={{ color: "#a78bfa", fontSize: "12px", fontStyle: "italic", marginBottom: "10px" }}>✝ {section.scripture}</p>}
+                      {section.congregationalResponse && (
+                        <div style={{ padding: "10px 14px", background: "rgba(139,92,246,0.1)", borderRadius: "8px", borderLeft: "3px solid #a78bfa" }}>
+                          <p style={{ color: "#78716c", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase" as const, marginBottom: "4px" }}>Congregation</p>
+                          <p style={{ color: "#c4b5fd", fontSize: "14px", fontWeight: 600 }}>&ldquo;{section.congregationalResponse}&rdquo;</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Corporate Declaration */}
+                  {p.corporateDeclaration && (
+                    <div style={{ background: "rgba(139,92,246,0.1)", border: "2px solid rgba(139,92,246,0.3)", borderRadius: "12px", padding: "20px", marginBottom: "10px", textAlign: "center" as const }}>
+                      <p style={{ color: "#a78bfa", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "8px", fontWeight: 600 }}>Corporate Declaration</p>
+                      <p style={{ color: "#78716c", fontSize: "12px", marginBottom: "12px", fontStyle: "italic" }}>{p.corporateDeclaration.instruction}</p>
+                      <p style={{ color: "#fef3c7", fontSize: "16px", fontWeight: 700, lineHeight: 1.7, fontFamily: "Georgia, serif" }}>&ldquo;{p.corporateDeclaration.declaration}&rdquo;</p>
+                    </div>
+                  )}
+
+                  {/* Closing Blessing */}
+                  {p.closingBlessing && (
+                    <div style={{ background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "12px", padding: "18px" }}>
+                      <p style={{ color: "#a8956e", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "10px", fontWeight: 600 }}>Closing Blessing</p>
+                      <p style={{ color: "#fef3c7", fontSize: "14px", lineHeight: 1.85, marginBottom: "10px", fontFamily: "Georgia, serif" }}>{p.closingBlessing.text}</p>
+                      {p.closingBlessing.scripture && <p style={{ color: "#a8956e", fontSize: "12px", fontStyle: "italic" }}>✝ {p.closingBlessing.scripture}</p>}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Generated Sermon */}
             {generatedSermon && !generating && (
               <div className="animate-fade-in">
