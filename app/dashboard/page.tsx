@@ -14,6 +14,32 @@ const AUDIENCES = ["General Congregation", "Youth", "Outreach / Evangelism", "Me
 const TONES = ["Teaching", "Evangelistic", "Pastoral"];
 const PRAYER_TYPES = ["General Prayer", "Warfare"];
 
+const GENERAL_PRAYER_TOPICS = [
+  "Healing & Health",
+  "Peace & Anxiety",
+  "Financial Provision",
+  "Family & Relationships",
+  "Salvation of Loved Ones",
+  "Grief & Loss",
+  "Strength & Encouragement",
+  "Guidance & Direction",
+  "Forgiveness & Restoration",
+  "Thanksgiving & Praise",
+];
+
+const WARFARE_TOPICS = [
+  "Fear & Anxiety",
+  "Generational Curses",
+  "Spiritual Oppression",
+  "Sickness & Infirmity",
+  "Addiction & Bondage",
+  "Marital & Family Warfare",
+  "Ministry Protection",
+  "Financial Breakthrough",
+  "Depression & Heaviness",
+  "Witchcraft & Occult",
+];
+
 const LEVELS = [
   { key: "beginner",     label: "Beginner",     desc: "Simple language for new believers",          color: "#10b981", icon: "🌱" },
   { key: "intermediate", label: "Intermediate",  desc: "Deeper context for growing believers",       color: "#3b82f6", icon: "📖" },
@@ -116,6 +142,7 @@ export default function Dashboard() {
   const [activeMode, setActiveMode] = useState<"sermon" | "prayer">("sermon");
   const [prayerType, setPrayerType] = useState("General Prayer");
   const [generatedPrayer, setGeneratedPrayer] = useState<Record<string, unknown> | null>(null);
+  const [prayerTopic, setPrayerTopic] = useState("");
   const [email, setEmail] = useState("");
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [lowCredits, setLowCredits] = useState(false);
@@ -223,7 +250,7 @@ export default function Dashboard() {
       const res = await fetch("/api/prayer", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-user-id": user?.id || "" },
-        body: JSON.stringify({ topic, audience, type: prayerType, language }),
+        body: JSON.stringify({ topic: prayerTopic || topic, audience, type: prayerType, language }),
       });
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};
@@ -528,7 +555,7 @@ export default function Dashboard() {
                   <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "12px", fontWeight: 600 }}>🙏 Prayer Help</p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {PRAYER_TYPES.map((pt) => (
-                      <button key={pt} onClick={() => { setPrayerType(pt); setActiveMode("prayer"); setTone(""); }} style={{ padding: "12px 16px", borderRadius: "10px", border: "1px solid", borderColor: prayerType === pt && activeMode === "prayer" ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.12)", background: prayerType === pt && activeMode === "prayer" ? "rgba(139,92,246,0.1)" : "transparent", cursor: "pointer", textAlign: "left" as const, display: "flex", alignItems: "center", gap: "12px" }}>
+                      <button key={pt} onClick={() => { setPrayerType(pt); setActiveMode("prayer"); setTone(""); setPrayerTopic(""); }} style={{ padding: "12px 16px", borderRadius: "10px", border: "1px solid", borderColor: prayerType === pt && activeMode === "prayer" ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.12)", background: prayerType === pt && activeMode === "prayer" ? "rgba(139,92,246,0.1)" : "transparent", cursor: "pointer", textAlign: "left" as const, display: "flex", alignItems: "center", gap: "12px" }}>
                         <span style={{ fontSize: "20px" }}>{pt === "General Prayer" ? "🙏" : "⚔️"}</span>
                         <div style={{ flex: 1 }}>
                           <p style={{ color: prayerType === pt && activeMode === "prayer" ? "#a78bfa" : "#fef3c7", fontWeight: 600, fontSize: "14px", marginBottom: "2px" }}>{pt}</p>
@@ -543,9 +570,24 @@ export default function Dashboard() {
                     ))}
                   </div>
                   {activeMode === "prayer" && (
-                    <p style={{ color: "#57534e", fontSize: "11px", marginTop: "10px", fontStyle: "italic" }}>
-                      Prayer selected — click Generate to build your ministry prayer
-                    </p>
+                    <div style={{ marginTop: "12px" }}>
+                      <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase" as const, marginBottom: "8px", fontWeight: 600 }}>
+                        {prayerType === "Warfare" ? "⚔️ Warfare Focus" : "🙏 Prayer Focus"}
+                      </p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        <button onClick={() => setPrayerTopic("")} style={{ padding: "6px 12px", borderRadius: "16px", fontSize: "12px", border: "1px solid", borderColor: prayerTopic === "" ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.15)", background: prayerTopic === "" ? "rgba(139,92,246,0.12)" : "transparent", color: prayerTopic === "" ? "#a78bfa" : "#57534e", cursor: "pointer" }}>
+                          All Areas
+                        </button>
+                        {(prayerType === "Warfare" ? WARFARE_TOPICS : GENERAL_PRAYER_TOPICS).map(pt => (
+                          <button key={pt} onClick={() => setPrayerTopic(pt)} style={{ padding: "6px 12px", borderRadius: "16px", fontSize: "12px", border: "1px solid", borderColor: prayerTopic === pt ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.15)", background: prayerTopic === pt ? "rgba(139,92,246,0.12)" : "transparent", color: prayerTopic === pt ? "#a78bfa" : "#57534e", cursor: "pointer" }}>
+                            {pt}
+                          </button>
+                        ))}
+                      </div>
+                      <p style={{ color: "#57534e", fontSize: "11px", marginTop: "10px", fontStyle: "italic" }}>
+                        Prayer selected — click Generate to build your ministry prayer
+                      </p>
+                    </div>
                   )}
                 </div>
 
@@ -636,7 +678,7 @@ export default function Dashboard() {
 
                 {/* Generate button */}
                 <button onClick={() => activeMode === "prayer" ? generatePrayer() : generateSermon()} disabled={generating} className="btn-gold" style={{ width: "100%", padding: "16px", borderRadius: "12px", fontSize: "16px", fontWeight: 600, opacity: generating ? 0.7 : 1, cursor: generating ? "not-allowed" : "pointer" }}>
-                  {generating ? "Seeking the Word…" : "✦ Generate Sermon"}
+                  {generating ? (activeMode === "prayer" ? "🙏 Preparing Prayer..." : "✝ Preparing the Word...") : activeMode === "prayer" ? `🙏 Generate ${prayerType || "Prayer"}` : "✦ Generate Sermon"}
                 </button>
               </div>
             )}
