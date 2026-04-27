@@ -515,12 +515,38 @@ export default function Dashboard() {
                     <Label>Sermon Tone</Label>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {TONES.map((t) => (
-                        <button key={t} onClick={() => setTone(t)} style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "13px", border: "1px solid", borderColor: tone === t ? "rgba(245,158,11,0.55)" : "rgba(245,158,11,0.13)", background: tone === t ? "rgba(245,158,11,0.1)" : "transparent", color: tone === t ? "#f59e0b" : "#78716c", cursor: "pointer", fontWeight: tone === t ? 500 : 400 }}>
+                        <button key={t} onClick={() => { setTone(t); setActiveMode("sermon"); setPrayerType(""); }} style={{ padding: "8px 16px", borderRadius: "20px", fontSize: "13px", border: "1px solid", borderColor: tone === t && activeMode === "sermon" ? "rgba(245,158,11,0.55)" : "rgba(245,158,11,0.13)", background: tone === t && activeMode === "sermon" ? "rgba(245,158,11,0.1)" : "transparent", color: tone === t && activeMode === "sermon" ? "#f59e0b" : "#78716c", cursor: "pointer", fontWeight: tone === t && activeMode === "sermon" ? 500 : 400 }}>
                           {t}
                         </button>
                       ))}
                     </div>
                   </div>
+                </div>
+
+                {/* Card: Prayer Help */}
+                <div className="glass" style={{ borderRadius: "14px", padding: "20px", border: "1px solid rgba(139,92,246,0.15)" }}>
+                  <p style={{ color: "#a78bfa", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: "12px", fontWeight: 600 }}>🙏 Prayer Help</p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {PRAYER_TYPES.map((pt) => (
+                      <button key={pt} onClick={() => { setPrayerType(pt); setActiveMode("prayer"); setTone(""); }} style={{ padding: "12px 16px", borderRadius: "10px", border: "1px solid", borderColor: prayerType === pt && activeMode === "prayer" ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.12)", background: prayerType === pt && activeMode === "prayer" ? "rgba(139,92,246,0.1)" : "transparent", cursor: "pointer", textAlign: "left" as const, display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ fontSize: "20px" }}>{pt === "General Prayer" ? "🙏" : "⚔️"}</span>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ color: prayerType === pt && activeMode === "prayer" ? "#a78bfa" : "#fef3c7", fontWeight: 600, fontSize: "14px", marginBottom: "2px" }}>{pt}</p>
+                          <p style={{ color: "#57534e", fontSize: "12px" }}>
+                            {pt === "General Prayer" ? "Healing, peace, restoration, provision, breakthrough" : "Spiritual warfare, armour of God, corporate declarations"}
+                          </p>
+                        </div>
+                        <div style={{ width: "18px", height: "18px", borderRadius: "50%", border: `2px solid ${prayerType === pt && activeMode === "prayer" ? "#a78bfa" : "rgba(139,92,246,0.2)"}`, background: prayerType === pt && activeMode === "prayer" ? "#a78bfa" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {prayerType === pt && activeMode === "prayer" && <span style={{ color: "#fff", fontSize: "10px", fontWeight: 700 }}>✓</span>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  {activeMode === "prayer" && (
+                    <p style={{ color: "#57534e", fontSize: "11px", marginTop: "10px", fontStyle: "italic" }}>
+                      Prayer selected — click Generate to build your ministry prayer
+                    </p>
+                  )}
                 </div>
 
                 {/* Card: Level */}
