@@ -11,38 +11,61 @@ export async function POST(req: Request) {
   const targetLanguage = language || "English";
 
   const levelInstructions: Record<string, string> = {
-    beginner: `BEGINNER LEVEL — Write for new believers and new pastors.
-- Use simple everyday language. No theological jargon.
-- Every teaching point MUST include at least 2 scripture references.
-- Foundation and Foreword MUST each reference at least 1 scripture.
-- Ministry Flow MUST reference the anchor scripture and at least 1 supporting scripture.
-- Altar Call MUST include a scripture promise (e.g. Romans 10:9, John 3:16).
-- Closing Prayer MUST include a scripture blessing (e.g. Numbers 6:24-26, Ephesians 3:20).
-- Use KJV or NKJV scripture text. Format: "Reference — verse text".`,
 
-    intermediate: `INTERMEDIATE LEVEL — Write for growing believers with some Bible knowledge.
-- Every teaching point MUST include 2-3 scripture references with verse text quoted.
-- Connect Old Testament to New Testament in at least one teaching point.
-- Foundation MUST include historical context AND 2 scriptures.
-- Ministry Flow MUST weave in 2-3 scriptures organically.
-- Include at least one cross-reference that deepens the anchor scripture.
-- Altar Call MUST include 2 scripture promises.
-- Closing Prayer MUST include a scripture blessing.
-- Reference Greek or Hebrew word meaning for at least one key word.`,
+    beginner: `BEGINNER LEVEL — Certificate in Biblical Studies / Certificate in Ministry
+This sermon is structured for a pastor or minister who is in the foundational stage of their theological training and ministry development. This aligns with Certificate-level Bible College curriculum.
 
-    advanced: `ADVANCED LEVEL — Write for mature ministers and theologians.
-- Every teaching point MUST include 3-4 scripture references with verse text.
-- Each point must show cross-testament connections (OT + NT).
-- Include Greek or Hebrew word insights for key terms in each point.
-- Foundation MUST be rich with historical, cultural and covenant context plus 3 scriptures.
-- Ministry Flow MUST be deeply prophetic and grounded in 3-4 scriptures.
-- The Return to Anchor must show how the whole Bible points to this truth.
-- Altar Call MUST include 3 scripture promises with verse text.
-- Closing Prayer MUST be a scripture-woven blessing (weave actual verses into the prayer).
-- Reference at least one typological connection (e.g. OT foreshadowing NT).`,
+THEOLOGICAL FRAMEWORK:
+- Ground every point in clear, simple doctrinal truth — God, Jesus Christ, Holy Spirit, Salvation, Faith, Prayer
+- Introduce the pastor to the concept of expository preaching — letting the scripture speak for itself
+- Every teaching point must include 2 scripture references with the full verse text quoted
+- Use simple biblical terminology — define any theological words used (e.g. "grace means undeserved favour")
+- The Foundation section must explain WHO wrote the scripture, WHY it was written, and WHAT it means for us today
+- The Foreword must connect the ancient text to a modern, relatable, everyday situation
+- Ministry Flow must be gentle and pastoral — guide the congregation in a simple, heartfelt response to the Word
+- Altar Call must include a clear salvation scripture (Romans 10:9, John 3:16) with the full verse text
+- Closing Prayer must be a simple scripture-woven blessing the pastor can confidently speak aloud
+
+PASTORAL DEVELOPMENT GOAL:
+Help the emerging pastor learn to: (1) find a scripture, (2) understand its context, (3) explain it simply, (4) apply it practically, (5) invite a response. This is the foundation of every sermon they will ever preach.`,
+
+    intermediate: `INTERMEDIATE LEVEL — Diploma of Theology / Diploma of Ministry
+This sermon is structured for a pastor who has completed foundational training and is now growing in theological depth and ministerial confidence. This aligns with Diploma-level Bible College curriculum.
+
+THEOLOGICAL FRAMEWORK:
+- Build on foundational doctrine with deeper theological concepts — Covenant, Sanctification, Justification, Redemption, Kingdom of God
+- Introduce expository AND topical preaching methodology — showing how both draw from scripture
+- Every teaching point must include 2-3 scripture references with full verse text — connecting Old Testament to New Testament
+- Include at least one Greek or Hebrew word study per sermon — explain the original meaning and why it deepens the text
+- The Foundation section must provide historical, cultural, and covenant context — who was the original audience and what did this mean to them
+- Cross-reference at least one prophetic fulfillment — how did the Old Testament point to Christ
+- Ministry Flow must demonstrate gifts of the Spirit operating through the Word — knowledge, wisdom, faith
+- Altar Call must include 2 scripture promises with verse text — one for salvation, one for believers responding to the message
+- Closing Prayer must weave 2 scripture references into the blessing
+
+PASTORAL DEVELOPMENT GOAL:
+Help the developing pastor learn to: (1) study scripture in its original context, (2) trace themes across both Testaments, (3) understand the covenants, (4) preach with doctrinal precision, (5) lead their congregation into deeper encounters with God. This is the level where a pastor begins to truly understand WHY they believe what they preach.`,
+
+    advanced: `ADVANCED LEVEL — Bachelor of Theology / Bachelor of Ministry
+This sermon is structured for a mature, trained minister operating at a fully qualified theological level. This aligns with Degree-level Bible College curriculum — equivalent to the knowledge required to lead, plant, and govern a ministry.
+
+THEOLOGICAL FRAMEWORK:
+- Engage with systematic theology — Soteriology, Pneumatology, Ecclesiology, Eschatology, Christology, Hamartiology
+- Demonstrate hermeneutical precision — correct interpretation of scripture using grammatical-historical method
+- Every teaching point must include 3-4 scripture references with full verse text — covering OT type, NT fulfillment, Epistles application, and Revelation/prophetic scope
+- Include Greek and Hebrew word studies for key terms in EVERY teaching point — with the original word, transliteration, Strong's category, and what it reveals
+- The Foundation section must be a full biblical-theological treatment — historical setting, literary genre, covenant context, authorship, original audience, and theological significance
+- Include typology — identify OT persons, events, or objects that foreshadow Christ and the New Covenant (e.g. the Tabernacle as a type of Christ, Isaac as a type of Christ's sacrifice)
+- Ministry Flow must operate at prophetic and apostolic depth — the Word going forth with authority, healing declarations grounded in scripture, impartation of spiritual gifts
+- The Return to Anchor must show the full redemptive-historical arc — how this text fits within the meta-narrative of Scripture from Genesis to Revelation
+- Altar Call must include 3 scripture promises with verse text — covering salvation, healing/restoration, and commissioning
+- Closing Prayer must be a fully scripture-woven apostolic blessing — weaving actual verse texts into the prayer so the congregation receives the Word as they are being blessed
+
+PASTORAL DEVELOPMENT GOAL:
+Equip the fully qualified minister to: (1) preach with theological authority and academic precision, (2) understand every major doctrine and its scriptural foundation, (3) trace the full redemptive narrative across all 66 books, (4) operate in all five-fold ministry gifts, (5) establish, lead, govern, and multiply a local church. This is the level at which a pastor can teach others to preach, plant churches, and equip the Body of Christ.`,
   };
 
-  const languageStyleMap: Record<string, string> = {
+    const languageStyleMap: Record<string, string> = {
     "Bislama": "Write in Bislama — the Creole language of Vanuatu. Mix Bislama with English where needed.",
     "South Sea Islander": "Write in South Sea Islander English — warm, community-focused, deeply faith-rooted. Simple, heartfelt, communal tone.",
     "Pacific Islander English": "Write in Pacific Islander English — warm storytelling style, communal values, family-centred illustrations.",
