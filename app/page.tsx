@@ -182,57 +182,17 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Languages strip */}
-        <section style={{ padding: "8px 20px 32px", maxWidth: "700px", margin: "0 auto", position: "relative", zIndex: 10 }}>
+        {/* Languages strip — flags only */}
+        <section style={{ padding: "8px 20px 32px", maxWidth: "680px", margin: "0 auto", position: "relative", zIndex: 10 }}>
           <p style={{ color: "#57534e", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", textAlign: "center", marginBottom: "14px" }}>Ministry Languages — All Free</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
-            {[
-              { flag: "🇬🇧", label: "English" },
-              { flag: "🇪🇸", label: "Español" },
-              { flag: "🇫🇷", label: "Français" },
-              { flag: "🇧🇷", label: "Português" },
-              { flag: "🇩🇪", label: "Deutsch" },
-              { flag: "🇮🇹", label: "Italiano" },
-              { flag: "🇳🇱", label: "Nederlands" },
-              { flag: "🇿🇦", label: "Afrikaans" },
-              { flag: "🇿🇦", label: "IsiZulu" },
-              { flag: "🇰🇪", label: "Kiswahili" },
-              { flag: "🇳🇬", label: "Yorùbá" },
-              { flag: "🇳🇬", label: "Igbo" },
-              { flag: "🇳🇬", label: "Hausa" },
-              { flag: "🇪🇹", label: "Amharic" },
-              { flag: "🇸🇦", label: "Arabic" },
-              { flag: "🇮🇳", label: "Hindi" },
-              { flag: "🇮🇳", label: "Tamil" },
-              { flag: "🇮🇳", label: "Telugu" },
-              { flag: "🇵🇭", label: "Filipino" },
-              { flag: "🇮🇩", label: "Indonesia" },
-              { flag: "🇲🇾", label: "Malay" },
-              { flag: "🇨🇳", label: "中文" },
-              { flag: "🇰🇷", label: "한국어" },
-              { flag: "🇯🇵", label: "日本語" },
-              { flag: "🇷🇺", label: "Русский" },
-              { flag: "🇺🇦", label: "Українська" },
-              { flag: "🇷🇴", label: "Română" },
-              { flag: "🇵🇱", label: "Polski" },
-              { flag: "🇼🇸", label: "Samoa" },
-              { flag: "🇫🇯", label: "Fiji" },
-              { flag: "🇵🇬", label: "PNG" },
-              { flag: "🇳🇿", label: "Māori" },
-              { flag: "🇹🇴", label: "Tonga" },
-              { flag: "🇻🇺", label: "Vanuatu" },
-              { flag: "🌊", label: "S.Sea" },
-              { flag: "🇦🇺", label: "Aboriginal" },
-            ].map((l) => (
-              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 10px", borderRadius: "16px", background: "rgba(245,158,11,0.05)", border: "1px solid rgba(245,158,11,0.1)" }}>
-                <span style={{ fontSize: "16px" }}>{l.flag}</span>
-                <span style={{ color: "#78716c", fontSize: "11px" }}>{l.label}</span>
-              </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center" }}>
+            {["🇬🇧","🇪🇸","🇫🇷","🇧🇷","🇩🇪","🇮🇹","🇳🇱","🇿🇦","🇿🇦","🇰🇪","🇳🇬","🇳🇬","🇳🇬","🇪🇹","🇸🇦","🇮🇳","🇮🇳","🇮🇳","🇵🇭","🇮🇩","🇲🇾","🇨🇳","🇰🇷","🇯🇵","🇷🇺","🇺🇦","🇷🇴","🇵🇱","🇼🇸","🇫🇯","🇵🇬","🇳🇿","🇹🇴","🇻🇺","🌊","🇦🇺"].map((flag, i) => (
+              <span key={i} style={{ fontSize: "28px", lineHeight: 1 }}>{flag}</span>
             ))}
           </div>
         </section>
 
-        {/* Features */}
+                {/* Features */}
         <section style={{ padding: "48px 20px", maxWidth: "600px", margin: "0 auto", position: "relative", zIndex: 10 }}>
           <div className="cross-divider" style={{ marginBottom: "40px", fontSize: "18px" }}>✝</div>
           <h2 className="font-serif" style={{ textAlign: "center", fontSize: "28px", color: "#fef3c7", marginBottom: "32px" }}>
