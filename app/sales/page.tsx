@@ -183,9 +183,11 @@ export default function SalesPage() {
         <p style={{ color: "#6b5d47", fontSize: "16px", lineHeight: 1.8, maxWidth: "560px", margin: "0 auto 32px" }}>
           Language should never be a barrier to the Word of God. Every language is free — no extra cost for missionaries, Pacific Island ministers, African church planters, or Indigenous ministry leaders.
         </p>
-        <p style={{ fontSize: "32px", lineHeight: 2.2, letterSpacing: "6px" }}>
-          🇬🇧🇪🇸🇫🇷🇧🇷🇩🇪🇮🇹🇳🇱🇿🇦🇰🇪🇳🇬🇪🇹🇸🇦🇮🇳🇵🇭🇮🇩🇲🇾🇨🇳🇰🇷🇯🇵🇷🇺🇺🇦🇷🇴🇵🇱🇼🇸🇫🇯🇵🇬🇳🇿🇹🇴🇻🇺🌊🇦🇺
-        </p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", justifyContent: "center", maxWidth: "600px", margin: "0 auto" }}>
+          {["English","Español","Français","Português","Deutsch","Italiano","Nederlands","Afrikaans","IsiZulu","Kiswahili","Yorùbá","Igbo","Hausa","Amharic","Arabic","Hindi","Tamil","Telugu","Filipino","Bahasa","Malay","中文","한국어","日本語","Русский","Українська","Română","Polski","Samoan","Fijian","Tok Pisin","Māori","Tongan","Bislama","S. Sea Islander","Aboriginal English"].map(l => (
+            <span key={l} style={{ padding: "5px 12px", borderRadius: "16px", background: "rgba(212,175,90,0.07)", border: "1px solid rgba(212,175,90,0.15)", color: "#9a8a72", fontSize: "12px" }}>{l}</span>
+          ))}
+        </div>
       </section>
 
       {/* BUILT FOR */}
