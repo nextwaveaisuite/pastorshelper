@@ -609,7 +609,7 @@ export default function Dashboard() {
                 )}
 
                 {/* Generate button */}
-                <button onClick={activeMode === "prayer" ? generatePrayer : generateSermon} disabled={generating} className="btn-gold" style={{ width: "100%", padding: "16px", borderRadius: "12px", fontSize: "16px", fontWeight: 600, opacity: generating ? 0.7 : 1, cursor: generating ? "not-allowed" : "pointer" }}>
+                <button onClick={() => activeMode === "prayer" ? generatePrayer() : generateSermon()} disabled={generating} className="btn-gold" style={{ width: "100%", padding: "16px", borderRadius: "12px", fontSize: "16px", fontWeight: 600, opacity: generating ? 0.7 : 1, cursor: generating ? "not-allowed" : "pointer" }}>
                   {generating ? "Seeking the Word…" : "✦ Generate Sermon"}
                 </button>
               </div>
