@@ -4,11 +4,11 @@ import "../styles/globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://thepastorshelper.com"),
   title: {
-    default: "The Pastors Helper — Spirit-Led Sermon Builder for Pastors & Ministers",
+    default: "The Pastors Helper — Scripture-Anchored Sermon & Prayer Builder for Pastors",
     template: "%s | The Pastors Helper",
   },
   description:
-    "The Pastors Helper is a Spirit-led sermon building tool for pastors, ministers, and church leaders. Build complete, Scripture-anchored sermons in seconds — with teaching points, ministry flow, altar calls, and preach mode. Available in 33 languages.",
+    "The Pastors Helper builds complete Scripture-anchored sermons and ministry prayers for pastors, evangelists and teachers. Three theological levels — Certificate, Diploma and Degree — with ministry flow, altar calls, warfare prayers and preach mode. Available in 36+ languages.",
   keywords: [
     "sermon builder",
     "sermon generator",
@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     "sermon generator for pastors",
     "sermon app for ministers",
     "multilingual sermon builder",
+    "ministry prayer builder",
+    "spiritual warfare prayer",
+    "certificate diploma degree theology",
     "Samoan sermon",
     "Tongan sermon",
     "Fijian sermon",
@@ -69,23 +72,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://thepastorshelper.com",
     siteName: "The Pastors Helper",
-    title: "The Pastors Helper — Spirit-Led Sermon Builder for Pastors & Ministers",
+    title: "The Pastors Helper — Scripture-Anchored Sermon & Prayer Builder for Pastors",
     description:
-      "Build complete, Scripture-anchored sermons in seconds. Teaching points, ministry flow, altar calls, preach mode — in 33 languages. Built for pastors, ministers, and church leaders at every level.",
+      "Build complete Scripture-anchored sermons and ministry prayers. Three theological levels, 36+ languages, ministry flow, warfare prayers, altar calls and preach mode. Built for pastors, evangelists and teachers.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "The Pastors Helper — Spirit-Led Sermon Builder",
+        alt: "The Pastors Helper — Scripture-Anchored Sermon & Prayer Builder",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Pastors Helper — Spirit-Led Sermon Builder",
+    title: "The Pastors Helper — Sermon & Prayer Builder for Pastors",
     description:
-      "Build complete Scripture-anchored sermons in seconds. Teaching points, ministry flow, altar calls, preach mode — in 33 languages.",
+      "Scripture-anchored sermons and ministry prayers for pastors, evangelists and teachers. Three theological levels, 36+ languages, warfare prayers and preach mode.",
     images: ["/og-image.png"],
     creator: "@thepastorshelper",
   },
