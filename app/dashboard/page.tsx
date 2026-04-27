@@ -11,7 +11,8 @@ import Link from "next/link";
 const ADMIN_EMAIL = "chnomg@gmail.com";
 
 const AUDIENCES = ["General Congregation", "Youth", "Outreach / Evangelism", "Men's Ministry", "Women's Ministry", "Leaders"];
-const TONES = ["Teaching", "Evangelistic", "Pastoral", "General Prayer", "Warfare"];
+const TONES = ["Teaching", "Evangelistic", "Pastoral"];
+const PRAYER_TYPES = ["General Prayer", "Warfare"];
 
 const LEVELS = [
   { key: "beginner",     label: "Beginner",     desc: "Simple language for new believers",          color: "#10b981", icon: "🌱" },
@@ -112,6 +113,9 @@ export default function Dashboard() {
   const [tone, setTone] = useState("Teaching");
   const [level, setLevel] = useState("beginner");
   const [language, setLanguage] = useState("English");
+  const [activeMode, setActiveMode] = useState<"sermon" | "prayer">("sermon");
+  const [prayerType, setPrayerType] = useState("General Prayer");
+  const [generatedPrayer, setGeneratedPrayer] = useState<Record<string, unknown> | null>(null);
   const [email, setEmail] = useState("");
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
   const [lowCredits, setLowCredits] = useState(false);
@@ -200,6 +204,40 @@ export default function Dashboard() {
   }, [router, loadSermons, loadSeries]);
 
   const selectedLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
+
+  const generatePrayer = async () => {
+    if (!user) return;
+    setGenerating(true);
+    setError("");
+    setGeneratedSermon(null);
+    setGeneratedPrayer(null);
+
+    try {
+      // Deduct 1 credit for prayer
+      const deductData = await safeFetch("/api/credits/deduct", { user_id: user?.id || "", level: "beginner", topic: prayerType });
+      if (deductData.error === "insufficient_credits") {
+        throw new Error(`Not enough credits. You need 1 credit but have ${deductData.balance}. Top up at the Credits page.`);
+      }
+      if (deductData.new_balance !== undefined) setCreditBalance(Number(deductData.new_balance));
+
+      const res = await fetch("/api/prayer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-user-id": user?.id || "" },
+        body: JSON.stringify({ topic, audience, type: prayerType, language }),
+      });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
+
+      if (data.error) throw new Error(data.error);
+      if (!data.prayer) throw new Error("No prayer returned. Please try again.");
+
+      setGeneratedPrayer(data.prayer as Record<string, unknown>);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Prayer generation failed. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const generateSermon = async () => {
     if (!topic.trim()) { setError("Please enter or choose a topic."); return; }
@@ -571,7 +609,7 @@ export default function Dashboard() {
                 )}
 
                 {/* Generate button */}
-                <button onClick={generateSermon} disabled={generating} className="btn-gold" style={{ width: "100%", padding: "16px", borderRadius: "12px", fontSize: "16px", fontWeight: 600, opacity: generating ? 0.7 : 1, cursor: generating ? "not-allowed" : "pointer" }}>
+                <button onClick={activeMode === "prayer" ? generatePrayer : generateSermon} disabled={generating} className="btn-gold" style={{ width: "100%", padding: "16px", borderRadius: "12px", fontSize: "16px", fontWeight: 600, opacity: generating ? 0.7 : 1, cursor: generating ? "not-allowed" : "pointer" }}>
                   {generating ? "Seeking the Word…" : "✦ Generate Sermon"}
                 </button>
               </div>
