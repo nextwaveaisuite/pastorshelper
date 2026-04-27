@@ -14,16 +14,27 @@ export async function POST(req: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Hardcoded unlimited for owner
+    // Hardcoded unlimited for owner — always ensure row exists with unlimited
     const { data: profile } = await supabase
       .from("user_profiles")
       .select("email")
       .eq("id", user_id)
-      .single();
+      .maybeSingle();
 
     if (profile?.email === "chnomg@gmail.com") {
-      await supabase.from("user_credits").upsert({ user_id, unlimited: true, balance: 99999 });
-      return NextResponse.json({ credits: { balance: 99999, total_purchased: 0, total_used: 0, is_free_tier: false, unlimited: true } });
+      // Ensure row exists with unlimited flag
+      await supabase.from("user_credits").upsert({
+        user_id,
+        unlimited: true,
+        balance: 99999,
+        total_purchased: 0,
+        total_used: 0,
+        is_free_tier: false,
+        last_free_topup: new Date().toISOString().split("T")[0],
+      });
+      // Return live data from DB
+      const { data: ownerCredits } = await supabase.from("user_credits").select("*").eq("user_id", user_id).single();
+      return NextResponse.json({ credits: ownerCredits || { balance: 99999, total_purchased: 0, total_used: 0, is_free_tier: false, unlimited: true } });
     }
 
     // Get or create credit record
