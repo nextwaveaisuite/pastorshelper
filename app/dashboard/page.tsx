@@ -712,6 +712,9 @@ export default function Dashboard() {
                 </SermonSection>
 
                 <SermonSection id="s4" label="🔥 Core Teaching">
+                  {(!generatedSermon.teachingPoints || generatedSermon.teachingPoints.length === 0) && (
+                    <p style={{ color: "#f87171", fontSize: "13px" }}>Teaching points not generated — please try regenerating the sermon.</p>
+                  )}
                   {generatedSermon.teachingPoints?.map((point, i) => (
                     <div key={i} style={{ marginBottom: i < generatedSermon.teachingPoints.length - 1 ? "22px" : 0, paddingBottom: i < generatedSermon.teachingPoints.length - 1 ? "22px" : 0, borderBottom: i < generatedSermon.teachingPoints.length - 1 ? "1px solid rgba(245,158,11,0.07)" : "none" }}>
                       <p style={{ color: "#f59e0b", fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase" as const, marginBottom: "4px" }}>Point {i + 1}</p>
