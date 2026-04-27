@@ -15,3 +15,9 @@
   for = "/api/*"
   [headers.values]
     Cache-Control = "no-cache"
+
+[[redirects]]
+  from = "https://go.thepastorshelper.com/*"
+  to = "https://thepastorshelper.com/sales/:splat"
+  status = 301
+  force = true
