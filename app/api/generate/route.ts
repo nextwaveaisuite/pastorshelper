@@ -103,71 +103,71 @@ ${toneInstruction}
 CRITICAL SCRIPTURE RULE: Every section must contain actual scripture verse text, not just references.
 Format all scriptures as: "Book Chapter:Verse — verse text here"
 
-Return this complete JSON — ALL fields required:
+Return this complete JSON — ALL fields required. IMPORTANT: Generate teachingPoints FIRST before all other sections:
 
 {
   "title": "compelling sermon title",
-  "alternativeTitles": ["alt title 1", "alt title 2"],
+  "theme": "one sentence core revelation",
   "anchorScripture": {
     "reference": "Book Chapter:Verse",
     "kjv": "Full KJV verse text",
     "nkjv": "Full NKJV verse text"
   },
-  "theme": "one sentence core revelation rooted in the scripture",
-  "opening": {
-    "greeting": "warm opening greeting that references the anchor scripture",
-    "hook": "relatable hook that connects to the theme with a scripture anchor"
-  },
-  "foundation": {
-    "context": "historical and spiritual context of the scripture with supporting verse",
-    "breakdown": "verse-by-verse breakdown with additional scripture cross-reference"
-  },
-  "foreword": {
-    "whyItMatters": "why this message matters today, grounded in a scripture promise",
-    "relatable": "relatable illustration that connects back to the scripture"
-  },
   "teachingPoints": [
     {
       "title": "Point 1 title",
       "scripture": "Primary scripture — full verse text",
-      "supportingScriptures": ["Second scripture — verse text", "Third scripture — verse text"],
-      "explanation": "explanation that weaves the scriptures together",
-      "application": "practical application grounded in scripture promise"
+      "supportingScriptures": ["Second scripture — full verse text", "Third scripture — full verse text"],
+      "explanation": "Thorough explanation weaving all scriptures together",
+      "application": "Practical application grounded in a scripture promise"
     },
     {
       "title": "Point 2 title",
       "scripture": "Primary scripture — full verse text",
-      "supportingScriptures": ["Second scripture — verse text", "Third scripture — verse text"],
-      "explanation": "explanation that weaves the scriptures together",
-      "application": "practical application grounded in scripture promise"
+      "supportingScriptures": ["Second scripture — full verse text", "Third scripture — full verse text"],
+      "explanation": "Thorough explanation weaving all scriptures together",
+      "application": "Practical application grounded in a scripture promise"
     },
     {
       "title": "Point 3 title",
       "scripture": "Primary scripture — full verse text",
-      "supportingScriptures": ["Second scripture — verse text", "Third scripture — verse text"],
-      "explanation": "explanation that weaves the scriptures together",
-      "application": "practical application grounded in scripture promise"
+      "supportingScriptures": ["Second scripture — full verse text", "Third scripture — full verse text"],
+      "explanation": "Thorough explanation weaving all scriptures together",
+      "application": "Practical application grounded in a scripture promise"
     }
   ],
+  "opening": {
+    "greeting": "Warm opening greeting referencing the anchor scripture",
+    "hook": "Relatable hook connecting to the theme"
+  },
+  "foundation": {
+    "context": "Historical and spiritual context with supporting verse",
+    "breakdown": "Verse-by-verse breakdown with cross-reference"
+  },
+  "foreword": {
+    "whyItMatters": "Why this message matters today with scripture promise",
+    "relatable": "Relatable illustration connecting to the scripture"
+  },
   "ministryFlow": {
-    "giftOfKnowledge": "prophetic word grounded in a scripture (include reference)",
-    "impartation": "impartation language with a scripture promise spoken over the congregation",
-    "edification": "words of encouragement woven with scripture",
-    "slowDown": "reflective pause — read a scripture slowly and let it settle",
-    "returnToAnchor": "return to anchor scripture showing the full circle of the message"
+    "giftOfKnowledge": "Prophetic word with scripture reference",
+    "impartation": "Impartation with scripture promise over the congregation",
+    "edification": "Encouragement woven with scripture",
+    "slowDown": "Reflective pause with a scripture read slowly",
+    "returnToAnchor": "Return to anchor scripture showing the full circle"
   },
   "summary": {
     "keyTakeaways": [
-      "Takeaway 1 with supporting scripture reference",
-      "Takeaway 2 with supporting scripture reference",
-      "Takeaway 3 with supporting scripture reference"
+      "Takeaway 1 with scripture reference",
+      "Takeaway 2 with scripture reference",
+      "Takeaway 3 with scripture reference"
     ]
   },
   "altarCall": {
-    "invitation": "heartfelt invitation grounded in a scripture promise",
-    "prayer": "guided prayer that weaves scripture into the words spoken"
+    "invitation": "Heartfelt invitation with scripture promise",
+    "prayer": "Guided salvation prayer woven with scripture"
   },
-  "closingPrayer": "blessing prayer that weaves actual scripture verses into the words"
+  "closingPrayer": "Blessing prayer with actual scripture verses woven in",
+  "alternativeTitles": ["Alt title 1", "Alt title 2"]
 }`;
 
   try {
@@ -180,7 +180,7 @@ Return this complete JSON — ALL fields required:
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1800,
+        max_tokens: 2200,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
@@ -236,56 +236,109 @@ Return this complete JSON — ALL fields required:
       return NextResponse.json({ error: "Empty sermon returned. Please try again." }, { status: 500 });
     }
 
-    // Ensure all fields exist with fallbacks
-    sermon.title = sermon.title || topic;
-    sermon.alternativeTitles = (sermon.alternativeTitles as unknown[]) || [];
-    sermon.theme = sermon.theme || "";
+    // ── Ensure ALL fields exist with proper fallbacks ──
 
-    // Ensure teaching points have supportingScriptures
-    const points = (sermon.teachingPoints as Record<string, unknown>[]) || [];
-    sermon.teachingPoints = points.map(p => ({
-      ...p,
-      supportingScriptures: (p.supportingScriptures as string[]) || [],
-    }));
+    sermon.title = (sermon.title as string) || topic;
+    sermon.alternativeTitles = (sermon.alternativeTitles as string[]) || [];
+    sermon.theme = (sermon.theme as string) || `A message on ${topic} — rooted in the Word of God.`;
 
+    // anchorScripture
+    const anch = (sermon.anchorScripture as Record<string, string>) || {};
+    sermon.anchorScripture = {
+      reference: anch.reference || "John 3:16",
+      kjv: anch.kjv || "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+      nkjv: anch.nkjv || "For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life.",
+    };
+
+    // opening
+    const op = (sermon.opening as Record<string, string>) || {};
+    sermon.opening = {
+      greeting: op.greeting || `Beloved, we come together today around the Word of God on the subject of ${topic}.`,
+      hook: op.hook || `The Word of God never returns void — and today's message on ${topic} is alive with purpose for your life.`,
+    };
+
+    // foundation
+    const found = (sermon.foundation as Record<string, string>) || {};
+    sermon.foundation = {
+      context: found.context || `This scripture was written to anchor believers in the truth of ${topic}. Understanding its context deepens our appreciation of what God is saying to us today.`,
+      breakdown: found.breakdown || `Every word of this passage carries weight. As Hebrews 4:12 declares — "For the word of God is quick, and powerful, and sharper than any twoedged sword." Let us receive it as such.`,
+    };
+
+    // foreword
+    const fw = (sermon.foreword as Record<string, string>) || {};
+    sermon.foreword = {
+      whyItMatters: fw.whyItMatters || `In our world today, the subject of ${topic} matters more than ever. God's Word speaks directly to where we are.`,
+      relatable: fw.relatable || `Think of how this truth applies to your everyday life. The Word of God is not distant — it is near, as Romans 10:8 declares: "The word is nigh thee, even in thy mouth, and in thy heart."`,
+    };
+
+    // teachingPoints — must have all 3
+    const rawPoints = (sermon.teachingPoints as Record<string, unknown>[]) || [];
+    const defaultPoints = [
+      {
+        title: `The Foundation of ${topic}`,
+        scripture: `John 15:5 — "I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing."`,
+        supportingScriptures: [`Psalm 119:105 — "Thy word is a lamp unto my feet, and a light unto my path."`, `Romans 8:28 — "And we know that all things work together for good to them that love God."`],
+        explanation: `Scripture teaches us that ${topic} begins with our connection to Christ. Without Him we can do nothing — but with Him, all things are possible.`,
+        application: `Apply this truth daily. Return to the Word, return to prayer, and watch God move in every area of your life.`,
+      },
+      {
+        title: `The Promise of ${topic}`,
+        scripture: `Jeremiah 29:11 — "For I know the thoughts that I think toward you, saith the Lord, thoughts of peace, and not of evil, to give you an expected end."`,
+        supportingScriptures: [`Isaiah 41:10 — "Fear thou not; for I am with thee: be not dismayed; for I am thy God."`, `Philippians 4:13 — "I can do all things through Christ which strengtheneth me."`],
+        explanation: `God's promise regarding ${topic} is clear — He is for you and not against you. His plans are good, and His Word is sure.`,
+        application: `Stand on the promise. Speak the Word over your situation and trust that God who promised is faithful.`,
+      },
+      {
+        title: `Walking in ${topic}`,
+        scripture: `Joshua 1:8 — "This book of the law shall not depart out of thy mouth; but thou shalt meditate therein day and night, that thou mayest observe to do according to all that is written therein."`,
+        supportingScriptures: [`Proverbs 3:5-6 — "Trust in the Lord with all thine heart; and lean not unto thine own understanding."`, `2 Timothy 3:16-17 — "All scripture is given by inspiration of God, and is profitable for doctrine, for reproof, for correction, for instruction in righteousness."`],
+        explanation: `Living out ${topic} requires consistent meditation on the Word of God. It is the daily discipline of the believer that produces lasting fruit.`,
+        application: `Make the Word your daily foundation. Let it guide your decisions, shape your character, and fuel your faith.`,
+      },
+    ];
+
+    sermon.teachingPoints = rawPoints.length >= 3
+      ? rawPoints.map((p, i) => ({
+          title: (p.title as string) || defaultPoints[i].title,
+          scripture: (p.scripture as string) || defaultPoints[i].scripture,
+          supportingScriptures: (p.supportingScriptures as string[])?.length > 0 ? (p.supportingScriptures as string[]) : defaultPoints[i].supportingScriptures,
+          explanation: (p.explanation as string) || defaultPoints[i].explanation,
+          application: (p.application as string) || defaultPoints[i].application,
+        }))
+      : defaultPoints;
+
+    // ministryFlow
     const mf = (sermon.ministryFlow as Record<string, string>) || {};
     sermon.ministryFlow = {
-      giftOfKnowledge: mf.giftOfKnowledge || "The Lord says: I know the plans I have for you — plans to prosper you and not to harm you. (Jeremiah 29:11)",
-      impartation: mf.impartation || "Receive strength for your calling. As Isaiah 40:31 declares — they that wait upon the Lord shall renew their strength.",
-      edification: mf.edification || "You are fearfully and wonderfully made. (Psalm 139:14) God is not finished with you.",
-      slowDown: mf.slowDown || "Be still and know that I am God. (Psalm 46:10) Let that settle in your spirit right now.",
-      returnToAnchor: mf.returnToAnchor || `Return to the Word — this is what God says about ${topic}.`,
+      giftOfKnowledge: mf.giftOfKnowledge || `There is someone here today who has been struggling with doubt about ${topic}. The Lord says: His Word is true and His promises are yes and amen. (2 Corinthians 1:20)`,
+      impartation: mf.impartation || `Receive this word into your spirit right now. As Isaiah 40:31 declares — "They that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles."`,
+      edification: mf.edification || `You are fearfully and wonderfully made. (Psalm 139:14) God is not finished with you — and this word on ${topic} is a turning point in your journey.`,
+      slowDown: mf.slowDown || `"Be still, and know that I am God." (Psalm 46:10) Take a moment right now. Let the Word settle deep in your spirit.`,
+      returnToAnchor: mf.returnToAnchor || `We return to where we began — the Word of God. Everything the Lord has spoken today comes back to this anchor scripture. Let it be the foundation of all He is building in your life regarding ${topic}.`,
     };
 
+    // summary
     const sum = (sermon.summary as Record<string, unknown>) || {};
     sermon.summary = {
-      keyTakeaways: (sum.keyTakeaways as string[]) || [
-        `God's Word on ${topic} is alive and active. (Hebrews 4:12)`,
-        "What you received today is meant to be lived, not just heard. (James 1:22)",
-        "Step out in faith — for God has not given us a spirit of fear. (2 Timothy 1:7)",
-      ],
+      keyTakeaways: ((sum.keyTakeaways as string[])?.length >= 3 ? sum.keyTakeaways as string[] : [
+        `God's Word on ${topic} is alive and active — it is working in you right now. (Hebrews 4:12)`,
+        `What you received today is meant to be lived, not just heard. "But be ye doers of the word." (James 1:22)`,
+        `Go forward in faith — "For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind." (2 Timothy 1:7)`,
+      ]),
     };
 
+    // altarCall
     const ac = (sermon.altarCall as Record<string, string>) || {};
     sermon.altarCall = {
-      invitation: ac.invitation || "If you confess with your mouth and believe in your heart that God raised Jesus from the dead, you will be saved. (Romans 10:9) Come to Him today.",
-      prayer: ac.prayer || "Lord Jesus, I confess You as my Lord and Saviour. I believe You died for me and rose again. I receive Your forgiveness and the gift of eternal life. Amen.",
+      invitation: ac.invitation || `If you have never surrendered your life to Jesus Christ, today is your day. "That if thou shalt confess with thy mouth the Lord Jesus, and shalt believe in thine heart that God hath raised him from the dead, thou shalt be saved." (Romans 10:9) Come to Him right now — He is waiting.`,
+      prayer: ac.prayer || `Lord Jesus, I come to You just as I am. I confess that I am a sinner in need of Your grace. I believe You died for me and rose again. I receive You as my Lord and Saviour. Forgive me of all my sins and fill me with Your Holy Spirit. I am Yours from this day forward. Amen.`,
     };
 
+    // closingPrayer
     sermon.closingPrayer = (sermon.closingPrayer as string) ||
-      "May the Lord bless you and keep you — may He make His face shine upon you and be gracious to you. (Numbers 6:24-25) Go in the peace and power of His Word. Amen.";
+      `"The Lord bless thee, and keep thee: The Lord make his face shine upon thee, and be gracious unto thee: The Lord lift up his countenance upon thee, and give thee peace." (Numbers 6:24-26) Go in the power of His Word. Walk in the truth of what you have received today. And may the God of all grace, who called you to His eternal glory in Christ, establish, strengthen, and settle you. To Him be the glory and the dominion for ever and ever. Amen. (1 Peter 5:10-11)`;
 
-    // Log usage analytics
-    if (topic && user_id_header) {
-      try {
-        const { createClient } = await import("@supabase/supabase-js");
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-        await supabase.from("sermon_usage").insert({ user_id: user_id_header, topic, level: level || "beginner", language: targetLanguage, tone, audience });
-        await supabase.from("user_profiles").update({ total_sermons_generated: supabase.rpc("increment", { x: 1 }), last_seen: new Date().toISOString() }).eq("id", user_id_header).catch(() => {});
-      } catch { /* non-fatal */ }
-    }
-
-    return NextResponse.json({ sermon });
+        return NextResponse.json({ sermon });
 
   } catch (err) {
     console.error("Route error:", err);
