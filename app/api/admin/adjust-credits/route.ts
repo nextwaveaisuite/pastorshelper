@@ -1,92 +1,44 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-const ADMIN_EMAIL = "chnomg@gmail.com";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { query, queryOne } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.isAdmin) return NextResponse.json({ error: "Unauthorised" }, { status: 403 });
+
     const text = await req.text();
-    const { requester_email, user_id, amount, action, reason } = text ? JSON.parse(text) : {};
-    if (requester_email !== ADMIN_EMAIL) return NextResponse.json({ error: "Unauthorised" }, { status: 403 });
+    const { user_id, action, amount, reason } = text ? JSON.parse(text) : {};
     if (!user_id || !action) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // Get current record
-    const { data: existing } = await supabase
-      .from("user_credits")
-      .select("balance, unlimited")
-      .eq("user_id", user_id)
-      .maybeSingle();
-
-    const currentBalance = existing?.balance || 0;
-
-    // If no row exists, create it first
-    if (!existing) {
-      await supabase.from("user_credits").insert({
-        user_id,
-        balance: 0,
-        is_free_tier: true,
-        unlimited: false,
-        total_purchased: 0,
-        total_used: 0,
-        last_free_topup: new Date().toISOString().split("T")[0],
-      });
-    }
+    const credits = await queryOne<Record<string, unknown>>("SELECT * FROM user_credits WHERE user_id = $1", [user_id]);
+    const currentBalance = (credits?.balance as number) || 0;
 
     if (action === "unlimited") {
-      await supabase.from("user_credits").upsert({ user_id, unlimited: true, balance: 99999 });
-      await supabase.from("credit_transactions").insert({ user_id, type: "admin_topup", amount: 99999, description: "Admin granted unlimited credits" }).catch(() => {});
-      return NextResponse.json({ success: true, previous_balance: currentBalance, new_balance: 99999, unlimited: true });
+      await query("UPDATE user_credits SET unlimited = true, balance = 99999 WHERE user_id = $1", [user_id]);
+      await query("INSERT INTO credit_transactions (user_id, type, amount, description) VALUES ($1, 'admin_topup', 99999, 'Admin granted unlimited')", [user_id]);
+      return NextResponse.json({ success: true, new_balance: 99999, unlimited: true });
     }
 
     if (action === "revoke_unlimited") {
-      await supabase.from("user_credits").upsert({ user_id, unlimited: false, balance: 50 });
-      await supabase.from("credit_transactions").insert({ user_id, type: "admin_topup", amount: 50, description: "Admin revoked unlimited — reset to 50" }).catch(() => {});
-      return NextResponse.json({ success: true, previous_balance: currentBalance, new_balance: 50, unlimited: false });
+      await query("UPDATE user_credits SET unlimited = false, balance = 50 WHERE user_id = $1", [user_id]);
+      return NextResponse.json({ success: true, new_balance: 50, unlimited: false });
     }
 
     const amt = parseInt(amount) || 0;
     let newBalance = currentBalance;
-    let transactionAmount = 0;
+    if (action === "add")    newBalance = currentBalance + amt;
+    if (action === "remove") newBalance = Math.max(0, currentBalance - amt);
+    if (action === "set")    newBalance = amt;
+    if (action === "reset")  newBalance = 0;
 
-    if (action === "add") {
-      newBalance = currentBalance + amt;
-      transactionAmount = amt;
-    } else if (action === "remove") {
-      newBalance = Math.max(0, currentBalance - amt);
-      transactionAmount = -(currentBalance - newBalance);
-    } else if (action === "set") {
-      newBalance = amt;
-      transactionAmount = newBalance - currentBalance;
-    } else if (action === "reset") {
-      newBalance = 0;
-      transactionAmount = -currentBalance;
-    }
-
-    // Use upsert so it works whether row exists or not
-    const { error } = await supabase
-      .from("user_credits")
-      .upsert({ user_id, balance: newBalance, unlimited: false });
-
-    if (error) {
-      console.error("Upsert error:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    await supabase.from("credit_transactions").insert({
-      user_id,
-      type: transactionAmount >= 0 ? "admin_topup" : "deduct",
-      amount: transactionAmount,
-      description: reason || `Admin ${action}: ${currentBalance} → ${newBalance}`,
-    }).catch(() => {});
+    await query("UPDATE user_credits SET balance = $1, unlimited = false WHERE user_id = $2", [newBalance, user_id]);
+    await query(
+      "INSERT INTO credit_transactions (user_id, type, amount, description) VALUES ($1, $2, $3, $4)",
+      [user_id, newBalance >= currentBalance ? "admin_topup" : "deduct", newBalance - currentBalance, reason || `Admin ${action}: ${currentBalance} → ${newBalance}`]
+    );
 
     return NextResponse.json({ success: true, previous_balance: currentBalance, new_balance: newBalance });
-
-  } catch (e) {
-    console.error("adjust-credits error:", e);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
+  } catch (e) { console.error(e); return NextResponse.json({ error: "Server error" }, { status: 500 }); }
 }
