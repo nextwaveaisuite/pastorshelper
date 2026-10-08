@@ -7,10 +7,8 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.isAdmin) return NextResponse.json({ error: "Unauthorised" }, { status: 403 });
-
     const users = await query(`
-      SELECT
-        u.id, u.email, u.created_at,
+      SELECT u.id, u.email, u.created_at,
         COALESCE(uc.balance, 0) as balance,
         COALESCE(uc.unlimited, false) as unlimited,
         COALESCE(uc.total_purchased, 0) as total_purchased,
@@ -25,7 +23,6 @@ export async function GET() {
       GROUP BY u.id, u.email, u.created_at, uc.balance, uc.unlimited, uc.total_purchased, uc.total_used, uc.is_free_tier
       ORDER BY u.created_at DESC
     `);
-
     return NextResponse.json({ users });
-  } catch (e) { console.error(e); return NextResponse.json({ users: [] }); }
+  } catch { return NextResponse.json({ users: [] }); }
 }

@@ -1,35 +1,26 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-const ADMIN_EMAIL = "chnomg@gmail.com";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { query } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const text = await req.text();
-    const { requester_email, email, starting_credits } = text ? JSON.parse(text) : {};
-    if (requester_email !== ADMIN_EMAIL) return NextResponse.json({ error: "Unauthorised" }, { status: 403 });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.isAdmin) return NextResponse.json({ error: "Unauthorised" }, { status: 403 });
+    const { email, starting_credits } = await req.json();
     if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
-
-    const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-
-    // Invite user via magic link
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-    // Set starting credits if specified
-    if (data?.user && starting_credits) {
-      await supabase.from("user_credits").upsert({
-        user_id: data.user.id,
-        balance: starting_credits,
-        last_free_topup: new Date().toISOString().split("T")[0],
-      });
-      await supabase.from("credit_transactions").insert({
-        user_id: data.user.id,
-        type: "admin_topup",
-        amount: starting_credits,
-        description: `Admin invited user with ${starting_credits} starting credits`,
-      });
+    // Create user with temp password
+    const tempPassword = Math.random().toString(36).slice(-10);
+    const hash = await bcrypt.hash(tempPassword, 12);
+    const rows = await query(
+      "INSERT INTO users (email, password_hash) VALUES ($1, $2) ON CONFLICT (email) DO NOTHING RETURNING *",
+      [email.toLowerCase(), hash]
+    );
+    if (rows[0]) {
+      await query("INSERT INTO user_credits (user_id, balance, is_free_tier) VALUES ($1, $2, true) ON CONFLICT DO NOTHING",
+        [rows[0].id, starting_credits || 10]);
     }
-
-    return NextResponse.json({ success: true, user: data?.user });
-  } catch (e) { console.error(e); return NextResponse.json({ error: "Server error" }, { status: 500 }); }
+    return NextResponse.json({ success: true });
+  } catch { return NextResponse.json({ error: "Server error" }, { status: 500 }); }
 }
