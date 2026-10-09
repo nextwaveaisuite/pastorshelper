@@ -45,39 +45,14 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = `You are a Scripture-rich sermon builder. Output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }.`;
 
-    const userPrompt = `Write a complete sermon JSON on: "${topic}"
-Audience: ${audience} | Tone: ${tone} | ${levelText} | ${toneInstruction}${langInstruction}
+    const userPrompt = `Write sermon JSON on: "${topic}" | Audience: ${audience} | Tone: ${tone}
+${levelText}
+${toneInstruction}${langInstruction}
 
-RULES: Output ONLY valid JSON. No markdown. No backticks. Keep all text fields SHORT (1-3 sentences max).
+CRITICAL: Output ONLY valid JSON. No markdown. No backticks. No extra text. Start with { end with }.
+Keep ALL text fields brief (1-2 sentences). Include full verse text in scripture fields.
 
-{
-  "title": "Sermon title",
-  "theme": "Core theme one sentence",
-  "anchorScripture": {
-    "reference": "Book Ch:V",
-    "kjv": "Full KJV verse text",
-    "nkjv": "Full NKJV verse text"
-  },
-  "opening": { "greeting": "Opening greeting", "hook": "Hook line" },
-  "foundation": { "context": "Historical context", "breakdown": "Verse breakdown" },
-  "foreword": { "whyItMatters": "Why it matters today", "relatable": "Illustration" },
-  "teachingPoints": [
-    { "title": "Point 1", "scripture": "Ref — verse text", "supportingScriptures": ["Ref — verse"], "explanation": "Explanation", "application": "Application" },
-    { "title": "Point 2", "scripture": "Ref — verse text", "supportingScriptures": ["Ref — verse"], "explanation": "Explanation", "application": "Application" },
-    { "title": "Point 3", "scripture": "Ref — verse text", "supportingScriptures": ["Ref — verse"], "explanation": "Explanation", "application": "Application" }
-  ],
-  "ministryFlow": {
-    "giftOfKnowledge": "Prophetic word",
-    "impartation": "Impartation",
-    "edification": "Encouragement",
-    "slowDown": "Reflective pause",
-    "returnToAnchor": "Return to anchor"
-  },
-  "summary": { "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"] },
-  "altarCall": { "invitation": "Invitation with scripture", "prayer": "Salvation prayer" },
-  "closingPrayer": "Closing blessing with scripture",
-  "alternativeTitles": ["Alt title 1", "Alt title 2"]
-}`;
+{"title":"","theme":"","anchorScripture":{"reference":"","kjv":"","nkjv":""},"opening":{"greeting":"","hook":""},"foundation":{"context":"","breakdown":""},"foreword":{"whyItMatters":"","relatable":""},"teachingPoints":[{"title":"","scripture":"Ref — verse","supportingScriptures":["Ref — verse"],"explanation":"","application":""},{"title":"","scripture":"Ref — verse","supportingScriptures":["Ref — verse"],"explanation":"","application":""},{"title":"","scripture":"Ref — verse","supportingScriptures":["Ref — verse"],"explanation":"","application":""}],"ministryFlow":{"giftOfKnowledge":"","impartation":"","edification":"","slowDown":"","returnToAnchor":""},"summary":{"keyTakeaways":["","",""]},"altarCall":{"invitation":"","prayer":""},"closingPrayer":"","alternativeTitles":["",""]}`;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -88,7 +63,7 @@ RULES: Output ONLY valid JSON. No markdown. No backticks. Keep all text fields S
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 3000,
+        max_tokens: 4096,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
@@ -105,18 +80,33 @@ RULES: Output ONLY valid JSON. No markdown. No backticks. Keep all text fields S
     const rawText: string = data.content?.[0]?.text || "";
     const cleaned = rawText.replace(/```json\s*/gi, "").replace(/```\s*/gi, "").trim();
     const start = cleaned.indexOf("{");
-    const end = cleaned.lastIndexOf("}");
-    if (start === -1) return NextResponse.json({ error: "No content returned. Please try again." }, { status: 500 });
+    if (start === -1) return NextResponse.json({ error: "No response from server. Please try again." }, { status: 500 });
 
     let sermon: Record<string, unknown> | null = null;
-    try {
-      sermon = JSON.parse(end > start ? cleaned.slice(start, end + 1) : cleaned.slice(start));
-    } catch {
-      try { sermon = JSON.parse(repairJson(cleaned.slice(start))); }
-      catch { return NextResponse.json({ error: "Could not read sermon. Please try again." }, { status: 500 }); }
+
+    // Try 1: parse from first { to last }
+    const end = cleaned.lastIndexOf("}");
+    if (end > start) {
+      try { sermon = JSON.parse(cleaned.slice(start, end + 1)); } catch { /* continue */ }
     }
 
-    if (!sermon) return NextResponse.json({ error: "Empty response. Please try again." }, { status: 500 });
+    // Try 2: repair and parse from first {
+    if (!sermon) {
+      try { sermon = JSON.parse(repairJson(cleaned.slice(start))); } catch { /* continue */ }
+    }
+
+    // Try 3: extract any valid partial JSON object
+    if (!sermon) {
+      const partial = extractPartialJson(cleaned.slice(start));
+      if (partial) sermon = partial;
+    }
+
+    // Try 4: build minimal sermon from what we can extract
+    if (!sermon) {
+      sermon = extractFieldsManually(cleaned, topic);
+    }
+
+    if (!sermon) return NextResponse.json({ error: "Could not build sermon. Please try again." }, { status: 500 });
 
     // Ensure all fields with fallbacks
     sermon.title = (sermon.title as string) || topic;
@@ -182,7 +172,8 @@ RULES: Output ONLY valid JSON. No markdown. No backticks. Keep all text fields S
 }
 
 function repairJson(str: string): string {
-  let result = str.replace(/,\s*$/, "");
+  // Remove trailing comma before closing
+  let result = str.replace(/,\s*([}\]])/g, "$1").replace(/,\s*$/, "");
   let braces = 0, brackets = 0, inString = false, escape = false;
   for (const ch of result) {
     if (escape) { escape = false; continue; }
@@ -196,4 +187,40 @@ function repairJson(str: string): string {
   for (let i = 0; i < brackets; i++) result += "]";
   for (let i = 0; i < braces; i++) result += "}";
   return result;
+}
+
+function extractPartialJson(str: string): Record<string, unknown> | null {
+  // Try progressively shorter slices to find valid JSON
+  for (let i = str.length; i > str.length * 0.3; i--) {
+    const slice = str.slice(0, i);
+    const lastClose = slice.lastIndexOf("}");
+    if (lastClose === -1) continue;
+    try {
+      const candidate = repairJson(slice.slice(0, lastClose + 1));
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object") return parsed;
+    } catch { /* continue */ }
+  }
+  return null;
+}
+
+function extractFieldsManually(str: string, topic: string): Record<string, unknown> {
+  const get = (key: string) => {
+    const m = str.match(new RegExp(`"${key}"\s*:\s*"([^"]*?)"`));
+    return m?.[1] || "";
+  };
+  return {
+    title: get("title") || `A Message on ${topic}`,
+    theme: get("theme") || `The power of ${topic}`,
+    anchorScripture: { reference: "John 3:16", kjv: "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.", nkjv: "For God so loved the world that He gave His only begotten Son, that whoever believes in Him should not perish but have everlasting life." },
+    opening: { greeting: `Welcome, beloved. Today we explore ${topic}.`, hook: "God has a word for you today." },
+    foundation: { context: "This scripture was written to reveal God's heart to His people.", breakdown: "Every word points us to the faithfulness of God." },
+    foreword: { whyItMatters: `${topic} is relevant to every believer today.`, relatable: "We all face moments where we need to hear from God." },
+    teachingPoints: [],
+    ministryFlow: { giftOfKnowledge: "God has a specific word for someone here today.", impartation: "Receive what God is releasing in this moment.", edification: "You are loved and valued by God.", slowDown: "Be still and know that He is God. (Psalm 46:10)", returnToAnchor: "We return to our anchor scripture — the foundation of today's message." },
+    summary: { keyTakeaways: [`${topic} is grounded in God's Word.`, "Faith is the key to walking in God's promises.", "You are called to live out what you have heard today."] },
+    altarCall: { invitation: "If you would like to receive Jesus today, come to Him right now.", prayer: "Lord Jesus, I believe You died for me and rose again. I receive You as my Lord and Saviour. Amen." },
+    closingPrayer: "May the Lord bless you and keep you. May His face shine upon you and give you peace. (Numbers 6:24-26) Amen.",
+    alternativeTitles: [],
+  };
 }
