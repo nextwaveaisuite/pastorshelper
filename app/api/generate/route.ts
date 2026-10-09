@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 
 import { query } from "@/lib/db";
 
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
       ? (languageStyleMap[targetLanguage] ? `\nLANGUAGE: ${languageStyleMap[targetLanguage]}` : `\nLANGUAGE: Write ALL sermon content in ${targetLanguage}.`)
       : "";
 
-    const systemPrompt = `You are a Scripture-rich sermon builder. Output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }. Be concise — keep each field under 3 sentences where possible.`;
+    const systemPrompt = `You are a Scripture-rich sermon builder. Output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }.`;
 
     const userPrompt = `Create a complete Scripture-rich sermon on: "${topic}"
 Audience: ${audience} | Tone: ${tone}
