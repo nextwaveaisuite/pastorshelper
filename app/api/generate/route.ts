@@ -45,27 +45,37 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = `You are a Scripture-rich sermon builder. Output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }.`;
 
-    const userPrompt = `Write a sermon on: "${topic}" | Audience: ${audience} | Tone: ${tone}
-${levelText}
-${toneInstruction}${langInstruction}
+    const userPrompt = `Write a complete sermon JSON on: "${topic}"
+Audience: ${audience} | Tone: ${tone} | ${levelText} | ${toneInstruction}${langInstruction}
 
-Return ONLY this JSON (keep each text field to 1-2 sentences max — be concise):
+RULES: Output ONLY valid JSON. No markdown. No backticks. Keep all text fields SHORT (1-3 sentences max).
+
 {
   "title": "Sermon title",
-  "theme": "One sentence core theme",
-  "anchorScripture": { "reference": "Book Chapter:Verse", "kjv": "Full KJV verse text here", "nkjv": "Full NKJV verse text here" },
+  "theme": "Core theme one sentence",
+  "anchorScripture": {
+    "reference": "Book Ch:V",
+    "kjv": "Full KJV verse text",
+    "nkjv": "Full NKJV verse text"
+  },
+  "opening": { "greeting": "Opening greeting", "hook": "Hook line" },
+  "foundation": { "context": "Historical context", "breakdown": "Verse breakdown" },
+  "foreword": { "whyItMatters": "Why it matters today", "relatable": "Illustration" },
   "teachingPoints": [
-    { "title": "Point 1 title", "scripture": "Reference — full verse text", "supportingScriptures": ["Reference — verse text"], "explanation": "1-2 sentence explanation", "application": "1-2 sentence application" },
-    { "title": "Point 2 title", "scripture": "Reference — full verse text", "supportingScriptures": ["Reference — verse text"], "explanation": "1-2 sentence explanation", "application": "1-2 sentence application" },
-    { "title": "Point 3 title", "scripture": "Reference — full verse text", "supportingScriptures": ["Reference — verse text"], "explanation": "1-2 sentence explanation", "application": "1-2 sentence application" }
+    { "title": "Point 1", "scripture": "Ref — verse text", "supportingScriptures": ["Ref — verse"], "explanation": "Explanation", "application": "Application" },
+    { "title": "Point 2", "scripture": "Ref — verse text", "supportingScriptures": ["Ref — verse"], "explanation": "Explanation", "application": "Application" },
+    { "title": "Point 3", "scripture": "Ref — verse text", "supportingScriptures": ["Ref — verse"], "explanation": "Explanation", "application": "Application" }
   ],
-  "opening": { "greeting": "Warm opening line", "hook": "Hook sentence" },
-  "foundation": { "context": "Historical context 1-2 sentences", "breakdown": "Verse breakdown 1-2 sentences" },
-  "foreword": { "whyItMatters": "Why this matters today", "relatable": "Relatable illustration" },
-  "ministryFlow": { "giftOfKnowledge": "Prophetic word with scripture", "impartation": "Impartation with promise", "edification": "Encouragement with scripture", "slowDown": "Reflective pause with verse", "returnToAnchor": "Return to anchor scripture" },
-  "summary": { "keyTakeaways": ["Takeaway 1 with scripture ref", "Takeaway 2 with scripture ref", "Takeaway 3 with scripture ref"] },
-  "altarCall": { "invitation": "Invitation with scripture promise", "prayer": "Short guided salvation prayer" },
-  "closingPrayer": "Scripture-woven blessing 2-3 sentences",
+  "ministryFlow": {
+    "giftOfKnowledge": "Prophetic word",
+    "impartation": "Impartation",
+    "edification": "Encouragement",
+    "slowDown": "Reflective pause",
+    "returnToAnchor": "Return to anchor"
+  },
+  "summary": { "keyTakeaways": ["Takeaway 1", "Takeaway 2", "Takeaway 3"] },
+  "altarCall": { "invitation": "Invitation with scripture", "prayer": "Salvation prayer" },
+  "closingPrayer": "Closing blessing with scripture",
   "alternativeTitles": ["Alt title 1", "Alt title 2"]
 }`;
 
@@ -78,7 +88,7 @@ Return ONLY this JSON (keep each text field to 1-2 sentences max — be concise)
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 1500,
+        max_tokens: 3000,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
