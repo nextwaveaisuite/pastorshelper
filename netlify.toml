@@ -14,3 +14,6 @@
   to = "https://thepastorshelper.com/sales/:splat"
   status = 301
   force = true
+
+[functions]
+  timeout = 60
