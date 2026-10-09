@@ -268,7 +268,7 @@ export default function Dashboard() {
                 <div style={{ textAlign: "center", padding: "60px 24px", background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "12px", marginBottom: "16px" }}>
                   <div style={{ fontSize: "36px", marginBottom: "16px", animation: "pulse 1.5s ease-in-out infinite" }}>✦</div>
                   <p style={{ color: "#f59e0b", fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}>Building Your Sermon...</p>
-                  <p style={{ color: "#78716c", fontSize: "14px" }}>Claude is writing your Scripture-anchored message. This takes 20–30 seconds.</p>
+                  <p style={{ color: "#78716c", fontSize: "14px" }}>The Holy Spirit is preparing your Scripture-anchored message. This takes 20–30 seconds.</p>
                   <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "20px" }}>
                     {[0,1,2].map(i => <div key={i} style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f59e0b", opacity: 0.5 }} />)}
                   </div>
