@@ -1,0 +1,7 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #0f0a05; color: #fef3c7; }
+input, select, textarea { background: rgba(255,255,255,0.05); border: 1px solid rgba(245,158,11,0.2); color: #fef3c7; border-radius: 8px; font-family: inherit; }
+input::placeholder { color: #57534e; }
+button { font-family: inherit; }
+.font-serif { font-family: Georgia, serif; }
