@@ -153,30 +153,25 @@ export default function Dashboard() {
     const W = 210; const MARGIN = 18; const CONTENT = W - MARGIN * 2;
     let y = 0; let pageNum = 1;
 
-    const gold  = [180, 140, 60]  as [number,number,number];
-    const dark  = [25, 16, 6]     as [number,number,number];
-    const brown = [90, 60, 20]    as [number,number,number];
-    const cream = [254, 248, 235] as [number,number,number];
-    const grey  = [100, 85, 65]   as [number,number,number];
-    const black = [30, 20, 10]    as [number,number,number];
+
 
     const checkPage = (needed = 20) => {
       if (y + needed > 272) {
         // Footer on current page
-        doc.setFillColor(...gold); doc.rect(0, 285, 210, 1.5, "F");
-        doc.setFontSize(8); doc.setTextColor(...grey);
+        doc.setFillColor(180, 140, 60); doc.rect(0, 285, 210, 1.5, "F");
+        doc.setFontSize(8); doc.setTextColor(100, 85, 65);
         doc.text("✝  The Pastors Helper", MARGIN, 291);
         doc.text(`Page ${pageNum}`, W - MARGIN, 291, { align: "right" });
         doc.addPage(); pageNum++; y = 0;
         // Thin gold top bar on new pages
-        doc.setFillColor(...gold); doc.rect(0, 0, 210, 2, "F");
+        doc.setFillColor(180, 140, 60); doc.rect(0, 0, 210, 2, "F");
         y = 12;
       }
     };
 
     // ── COVER HEADER ──────────────────────────────────────────────
-    doc.setFillColor(...dark); doc.rect(0, 0, 210, 52, "F");
-    doc.setFillColor(...gold[0], ...gold.slice(1) as [number,number]); doc.rect(0, 50, 210, 2, "F");
+    doc.setFillColor(25, 16, 6); doc.rect(0, 0, 210, 52, "F");
+    doc.setFillColor(180, 140, 60); doc.rect(0, 50, 210, 2, "F");
 
     // Cross symbol
     doc.setFontSize(20); doc.setTextColor(180, 140, 60);
@@ -209,14 +204,14 @@ export default function Dashboard() {
     if (anch?.reference) {
       checkPage(30);
       // Gold left bar
-      doc.setFillColor(...gold); doc.rect(MARGIN, y, 1.5, 22, "F");
+      doc.setFillColor(180, 140, 60); doc.rect(MARGIN, y, 1.5, 22, "F");
       // Light cream background
-      doc.setFillColor(...cream); doc.rect(MARGIN + 1.5, y, CONTENT - 1.5, 22, "F");
+      doc.setFillColor(254, 248, 235); doc.rect(MARGIN + 1.5, y, CONTENT - 1.5, 22, "F");
       doc.setFont("helvetica", "bold"); doc.setFontSize(8);
-      doc.setTextColor(...brown);
+      doc.setTextColor(90, 60, 20);
       doc.text("ANCHOR SCRIPTURE  —  " + anch.reference, MARGIN + 5, y + 6);
       doc.setFont("helvetica", "italic"); doc.setFontSize(10);
-      doc.setTextColor(...dark);
+      doc.setTextColor(25, 16, 6);
       const sv = doc.splitTextToSize(`"${anch.kjv}"`, CONTENT - 8);
       sv.forEach((l: string, i: number) => doc.text(l, MARGIN + 5, y + 13 + i * 5));
       y += 26; checkPage(5);
@@ -226,13 +221,13 @@ export default function Dashboard() {
     const sectionHead = (label: string) => {
       checkPage(16);
       y += 6;
-      doc.setFillColor(...gold); doc.rect(MARGIN, y, CONTENT, 0.5, "F");
+      doc.setFillColor(180, 140, 60); doc.rect(MARGIN, y, CONTENT, 0.5, "F");
       y += 4;
       doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-      doc.setTextColor(...gold);
+      doc.setTextColor(180, 140, 60);
       doc.text(label.toUpperCase(), MARGIN, y + 4);
       y += 9;
-      doc.setFillColor(...gold); doc.rect(MARGIN, y, CONTENT, 0.3, "F");
+      doc.setFillColor(180, 140, 60); doc.rect(MARGIN, y, CONTENT, 0.3, "F");
       y += 5;
     };
 
@@ -240,7 +235,7 @@ export default function Dashboard() {
     const bodyText = (text: string, indent = 0, italic = false) => {
       checkPage(8);
       doc.setFont("helvetica", italic ? "italic" : "normal");
-      doc.setFontSize(10); doc.setTextColor(...black);
+      doc.setFontSize(10); doc.setTextColor(30, 20, 10);
       doc.splitTextToSize(text, CONTENT - indent).forEach((l: string) => {
         checkPage(6); doc.text(l, MARGIN + indent, y); y += 5.5;
       });
@@ -250,7 +245,7 @@ export default function Dashboard() {
     const labelText = (label: string, text: string) => {
       checkPage(10);
       doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
-      doc.setTextColor(...brown); doc.text(label, MARGIN, y); y += 5;
+      doc.setTextColor(90, 60, 20); doc.text(label, MARGIN, y); y += 5;
       bodyText(text);
       y += 2;
     };
@@ -286,25 +281,25 @@ export default function Dashboard() {
       pts.forEach((p, i) => {
         checkPage(30);
         // Point number badge
-        doc.setFillColor(...gold); doc.rect(MARGIN, y, 5, 5, "F");
+        doc.setFillColor(180, 140, 60); doc.rect(MARGIN, y, 5, 5, "F");
         doc.setFont("helvetica", "bold"); doc.setFontSize(7);
         doc.setTextColor(255,255,255); doc.text(`${i+1}`, MARGIN + 1.5, y + 3.5);
         // Point title
         doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-        doc.setTextColor(...dark);
+        doc.setTextColor(25, 16, 6);
         doc.text(p.title as string, MARGIN + 7, y + 4);
         y += 9;
         // Scripture
         if (p.scripture) {
           checkPage(10);
-          doc.setFillColor(...cream); doc.rect(MARGIN, y, CONTENT, 0, "F");
+          doc.setFillColor(254, 248, 235); doc.rect(MARGIN, y, CONTENT, 0, "F");
           doc.setFont("helvetica", "bold"); doc.setFontSize(8);
-          doc.setTextColor(...brown);
+          doc.setTextColor(90, 60, 20);
           const sref = (p.scripture as string).split("—")[0]?.trim() || "";
           const stext = (p.scripture as string).split("—").slice(1).join("—").trim();
           if (sref) { doc.text(sref, MARGIN, y); y += 4; }
           doc.setFont("helvetica", "italic"); doc.setFontSize(9.5);
-          doc.setTextColor(...dark);
+          doc.setTextColor(25, 16, 6);
           doc.splitTextToSize(stext || p.scripture as string, CONTENT - 4).forEach((l: string) => {
             checkPage(6); doc.text(l, MARGIN + 4, y); y += 5;
           });
@@ -313,7 +308,7 @@ export default function Dashboard() {
         (p.supportingScriptures as string[] || []).forEach(ss => {
           checkPage(8);
           doc.setFont("helvetica", "italic"); doc.setFontSize(8.5);
-          doc.setTextColor(...grey);
+          doc.setTextColor(100, 85, 65);
           doc.splitTextToSize("↳ " + ss, CONTENT - 4).forEach((l: string) => {
             checkPage(6); doc.text(l, MARGIN + 4, y); y += 4.5;
           });
@@ -325,12 +320,12 @@ export default function Dashboard() {
         if (p.application) {
           checkPage(16);
           doc.setFillColor(245, 238, 220); doc.rect(MARGIN, y, CONTENT, 1, "F");
-          doc.setFillColor(...gold); doc.rect(MARGIN, y, 2, 10, "F");
+          doc.setFillColor(180, 140, 60); doc.rect(MARGIN, y, 2, 10, "F");
           doc.setFillColor(245, 238, 220); doc.rect(MARGIN + 2, y, CONTENT - 2, 10, "F");
           doc.setFont("helvetica", "bold"); doc.setFontSize(7.5);
-          doc.setTextColor(...brown); doc.text("APPLICATION", MARGIN + 5, y + 4);
+          doc.setTextColor(90, 60, 20); doc.text("APPLICATION", MARGIN + 5, y + 4);
           doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-          doc.setTextColor(...dark);
+          doc.setTextColor(25, 16, 6);
           doc.splitTextToSize(p.application as string, CONTENT - 8).forEach((l: string, li: number) => {
             doc.text(l, MARGIN + 5, y + 4 + (li+1) * 4.5);
           });
@@ -355,8 +350,8 @@ export default function Dashboard() {
       sectionHead("Summary");
       sum.keyTakeaways.forEach((t, i) => {
         checkPage(10);
-        doc.setFillColor(...gold); doc.circle(MARGIN + 2, y - 1, 1, "F");
-        doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...black);
+        doc.setFillColor(180, 140, 60); doc.circle(MARGIN + 2, y - 1, 1, "F");
+        doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(30, 20, 10);
         doc.splitTextToSize(t, CONTENT - 8).forEach((l: string, li: number) => {
           checkPage(6); doc.text(l, MARGIN + 6, y + li * 5);
         });
@@ -372,13 +367,13 @@ export default function Dashboard() {
       bodyText(ac.invitation); y += 4;
       if (ac.prayer) {
         checkPage(20);
-        doc.setFillColor(...cream); doc.rect(MARGIN, y, CONTENT, 2, "F");
-        doc.setFillColor(...gold); doc.rect(MARGIN, y, 2, 30, "F");
-        doc.setFillColor(...cream); doc.rect(MARGIN + 2, y, CONTENT - 2, 30, "F");
+        doc.setFillColor(254, 248, 235); doc.rect(MARGIN, y, CONTENT, 2, "F");
+        doc.setFillColor(180, 140, 60); doc.rect(MARGIN, y, 2, 30, "F");
+        doc.setFillColor(254, 248, 235); doc.rect(MARGIN + 2, y, CONTENT - 2, 30, "F");
         doc.setFont("helvetica", "bold"); doc.setFontSize(8);
-        doc.setTextColor(...brown); doc.text("GUIDED PRAYER", MARGIN + 6, y + 5);
+        doc.setTextColor(90, 60, 20); doc.text("GUIDED PRAYER", MARGIN + 6, y + 5);
         doc.setFont("helvetica", "italic"); doc.setFontSize(10);
-        doc.setTextColor(...dark);
+        doc.setTextColor(25, 16, 6);
         doc.splitTextToSize(ac.prayer, CONTENT - 10).forEach((l: string, li: number) => {
           doc.text(l, MARGIN + 6, y + 11 + li * 5.5);
         });
@@ -393,8 +388,8 @@ export default function Dashboard() {
     }
 
     // ── FINAL FOOTER ──────────────────────────────────────────────
-    doc.setFillColor(...gold); doc.rect(0, 285, 210, 1.5, "F");
-    doc.setFontSize(8); doc.setTextColor(...grey);
+    doc.setFillColor(180, 140, 60); doc.rect(0, 285, 210, 1.5, "F");
+    doc.setFontSize(8); doc.setTextColor(100, 85, 65);
     doc.text("✝  The Pastors Helper", MARGIN, 291);
     doc.text(`Page ${pageNum}`, W - MARGIN, 291, { align: "right" });
 
