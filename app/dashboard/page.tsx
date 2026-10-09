@@ -263,8 +263,20 @@ export default function Dashboard() {
                 ))}
               </div>
 
+              {/* SERMON LOADING */}
+              {activeMode === "sermon" && generating && !generatedSermon && (
+                <div style={{ textAlign: "center", padding: "60px 24px", background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "12px", marginBottom: "16px" }}>
+                  <div style={{ fontSize: "36px", marginBottom: "16px", animation: "pulse 1.5s ease-in-out infinite" }}>✦</div>
+                  <p style={{ color: "#f59e0b", fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}>Building Your Sermon...</p>
+                  <p style={{ color: "#78716c", fontSize: "14px" }}>Claude is writing your Scripture-anchored message. This takes 20–30 seconds.</p>
+                  <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "20px" }}>
+                    {[0,1,2].map(i => <div key={i} style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f59e0b", opacity: 0.5 }} />)}
+                  </div>
+                </div>
+              )}
+
               {/* SERMON BUILDER */}
-              {activeMode === "sermon" && !generatedSermon && (
+              {activeMode === "sermon" && !generatedSermon && !generating && (
                 <div style={s.card}>
                   <h2 style={{ color: "#fef3c7", fontSize: "18px", fontFamily: "Georgia,serif", marginBottom: "20px" }}>Build a Sermon</h2>
                   <div style={{ marginBottom: "14px" }}>
@@ -304,10 +316,9 @@ export default function Dashboard() {
                     </div>
                   </div>
                   {sermonError && <p style={{ color: "#f87171", fontSize: "13px", marginBottom: "12px" }}>{sermonError}</p>}
-                  <button onClick={generateSermon} disabled={generating} style={{ padding: "14px 32px", borderRadius: "8px", background: generating ? "rgba(245,158,11,0.3)" : "linear-gradient(135deg, #f59e0b, #d97706)", color: generating ? "#f59e0b" : "#0f0a05", fontWeight: 700, fontSize: "15px", border: generating ? "1px solid #f59e0b" : "none", cursor: generating ? "not-allowed" : "pointer" }}>
-                    {generating ? "⏳ Building your sermon — this takes 20–30 seconds..." : "✦ Generate Sermon"}
+                  <button onClick={generateSermon} style={{ padding: "14px 32px", borderRadius: "8px", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f0a05", fontWeight: 700, fontSize: "15px", border: "none", cursor: "pointer" }}>
+                    ✦ Generate Sermon
                   </button>
-                  {generating && <p style={{ color: "#78716c", fontSize: "13px", marginTop: "8px", fontStyle: "italic" }}>Please wait — Claude is writing your Scripture-anchored sermon...</p>}
                 </div>
               )}
 
