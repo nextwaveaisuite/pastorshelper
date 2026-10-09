@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { getSession } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getSession(req);
@@ -83,7 +85,7 @@ Return ONLY this JSON:
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 2000,
+        max_tokens: 3000,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
