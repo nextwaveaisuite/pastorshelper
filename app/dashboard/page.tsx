@@ -19,8 +19,17 @@ const LANGUAGES = ["English","Español","Français","Português","Deutsch","Ital
 const GENERAL_PRAYER_TOPICS = ["Healing & Health","Peace & Anxiety","Financial Provision","Family & Relationships","Salvation of Loved Ones","Grief & Loss","Strength & Encouragement","Guidance & Direction","Forgiveness & Restoration","Thanksgiving & Praise"];
 const WARFARE_TOPICS = ["Fear & Anxiety","Generational Curses","Spiritual Oppression","Sickness & Infirmity","Addiction & Bondage","Marital & Family Warfare","Ministry Protection","Financial Breakthrough","Depression & Heaviness","Witchcraft & Occult"];
 
-function safeFetch(url: string, body?: Record<string, unknown>) {
-  return fetch(url, { method: body ? "POST" : "GET", headers: body ? { "Content-Type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined }).then(r => r.json()).catch(() => ({}));
+async function safeFetch(url: string, body?: Record<string, unknown>) {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 55000);
+    const r = await fetch(url, { method: body ? "POST" : "GET", headers: body ? { "Content-Type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined, signal: controller.signal });
+    clearTimeout(timeout);
+    return await r.json();
+  } catch (e) {
+    console.error("safeFetch error:", url, e);
+    return { error: "Request failed. Please try again." };
+  }
 }
 
 export default function Dashboard() {
@@ -89,6 +98,7 @@ export default function Dashboard() {
     const data = await safeFetch("/api/generate", { topic, audience, tone, level, language });
     setGenerating(false);
     if (data.error) { setSermonError(data.error); return; }
+    if (!data.sermon) { setSermonError("No sermon returned — please try again."); return; }
     setGeneratedSermon(data.sermon);
     loadCredits();
   };
@@ -113,6 +123,7 @@ export default function Dashboard() {
     const data = await safeFetch("/api/prayer", { type: prayerType, topic: prayerTopic, audience, language: prayerLang });
     setGeneratingPrayer(false);
     if (data.error) { setPrayerError(data.error); return; }
+    if (!data.prayer) { setPrayerError("No prayer returned — please try again."); return; }
     setGeneratedPrayer(data.prayer);
     loadCredits();
   };
@@ -293,9 +304,10 @@ export default function Dashboard() {
                     </div>
                   </div>
                   {sermonError && <p style={{ color: "#f87171", fontSize: "13px", marginBottom: "12px" }}>{sermonError}</p>}
-                  <button onClick={generateSermon} disabled={generating} style={{ padding: "14px 32px", borderRadius: "8px", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f0a05", fontWeight: 700, fontSize: "15px", border: "none", cursor: generating ? "not-allowed" : "pointer", opacity: generating ? 0.7 : 1 }}>
-                    {generating ? "✦ Generating sermon..." : "✦ Generate Sermon"}
+                  <button onClick={generateSermon} disabled={generating} style={{ padding: "14px 32px", borderRadius: "8px", background: generating ? "rgba(245,158,11,0.3)" : "linear-gradient(135deg, #f59e0b, #d97706)", color: generating ? "#f59e0b" : "#0f0a05", fontWeight: 700, fontSize: "15px", border: generating ? "1px solid #f59e0b" : "none", cursor: generating ? "not-allowed" : "pointer" }}>
+                    {generating ? "⏳ Building your sermon — this takes 20–30 seconds..." : "✦ Generate Sermon"}
                   </button>
+                  {generating && <p style={{ color: "#78716c", fontSize: "13px", marginTop: "8px", fontStyle: "italic" }}>Please wait — Claude is writing your Scripture-anchored sermon...</p>}
                 </div>
               )}
 
