@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       ? (languageStyleMap[targetLanguage] ? `\nLANGUAGE: ${languageStyleMap[targetLanguage]}` : `\nLANGUAGE: Write ALL sermon content in ${targetLanguage}.`)
       : "";
 
-    const systemPrompt = `You are a Scripture-rich sermon builder. Output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }.`;
+    const systemPrompt = `You are a Scripture-rich sermon builder. Output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }. Be concise — keep each field under 3 sentences where possible.`;
 
     const userPrompt = `Create a complete Scripture-rich sermon on: "${topic}"
 Audience: ${audience} | Tone: ${tone}
@@ -125,7 +125,7 @@ Return this complete JSON:
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 2200,
+        max_tokens: 4096,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
