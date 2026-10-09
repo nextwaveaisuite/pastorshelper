@@ -45,76 +45,27 @@ export async function POST(req: NextRequest) {
 
     const systemPrompt = `You are a Scripture-rich sermon builder. Output ONLY valid JSON. No markdown, no backticks, no explanation. Start with { and end with }.`;
 
-    const userPrompt = `Create a complete Scripture-rich sermon on: "${topic}"
-Audience: ${audience} | Tone: ${tone}
+    const userPrompt = `Write a sermon on: "${topic}" | Audience: ${audience} | Tone: ${tone}
 ${levelText}
 ${toneInstruction}${langInstruction}
 
-CRITICAL: Generate teachingPoints FIRST. Every scripture reference must include the full verse text.
-
-Return this complete JSON:
+Return ONLY this JSON (keep each text field to 1-2 sentences max — be concise):
 {
-  "title": "sermon title",
-  "theme": "one sentence core revelation",
-  "anchorScripture": {
-    "reference": "Book Chapter:Verse",
-    "kjv": "Full KJV verse text",
-    "nkjv": "Full NKJV verse text"
-  },
+  "title": "Sermon title",
+  "theme": "One sentence core theme",
+  "anchorScripture": { "reference": "Book Chapter:Verse", "kjv": "Full KJV verse text here", "nkjv": "Full NKJV verse text here" },
   "teachingPoints": [
-    {
-      "title": "Point 1 title",
-      "scripture": "Primary scripture — full verse text",
-      "supportingScriptures": ["Second scripture — full verse text", "Third scripture — full verse text"],
-      "explanation": "Thorough explanation weaving all scriptures",
-      "application": "Practical application grounded in scripture"
-    },
-    {
-      "title": "Point 2 title",
-      "scripture": "Primary scripture — full verse text",
-      "supportingScriptures": ["Second scripture — full verse text", "Third scripture — full verse text"],
-      "explanation": "Thorough explanation weaving all scriptures",
-      "application": "Practical application grounded in scripture"
-    },
-    {
-      "title": "Point 3 title",
-      "scripture": "Primary scripture — full verse text",
-      "supportingScriptures": ["Second scripture — full verse text", "Third scripture — full verse text"],
-      "explanation": "Thorough explanation weaving all scriptures",
-      "application": "Practical application grounded in scripture"
-    }
+    { "title": "Point 1 title", "scripture": "Reference — full verse text", "supportingScriptures": ["Reference — verse text"], "explanation": "1-2 sentence explanation", "application": "1-2 sentence application" },
+    { "title": "Point 2 title", "scripture": "Reference — full verse text", "supportingScriptures": ["Reference — verse text"], "explanation": "1-2 sentence explanation", "application": "1-2 sentence application" },
+    { "title": "Point 3 title", "scripture": "Reference — full verse text", "supportingScriptures": ["Reference — verse text"], "explanation": "1-2 sentence explanation", "application": "1-2 sentence application" }
   ],
-  "opening": {
-    "greeting": "Warm opening greeting referencing anchor scripture",
-    "hook": "Relatable hook connecting to the theme"
-  },
-  "foundation": {
-    "context": "Historical and spiritual context with supporting verse",
-    "breakdown": "Verse-by-verse breakdown with cross-reference"
-  },
-  "foreword": {
-    "whyItMatters": "Why this message matters today with scripture",
-    "relatable": "Relatable illustration connecting to scripture"
-  },
-  "ministryFlow": {
-    "giftOfKnowledge": "Prophetic word with scripture reference",
-    "impartation": "Impartation with scripture promise",
-    "edification": "Encouragement woven with scripture",
-    "slowDown": "Reflective pause with scripture read slowly",
-    "returnToAnchor": "Return to anchor scripture showing full circle"
-  },
-  "summary": {
-    "keyTakeaways": [
-      "Takeaway 1 with scripture reference",
-      "Takeaway 2 with scripture reference",
-      "Takeaway 3 with scripture reference"
-    ]
-  },
-  "altarCall": {
-    "invitation": "Heartfelt invitation with scripture promise",
-    "prayer": "Guided salvation prayer woven with scripture"
-  },
-  "closingPrayer": "Blessing prayer with actual scripture verses woven in",
+  "opening": { "greeting": "Warm opening line", "hook": "Hook sentence" },
+  "foundation": { "context": "Historical context 1-2 sentences", "breakdown": "Verse breakdown 1-2 sentences" },
+  "foreword": { "whyItMatters": "Why this matters today", "relatable": "Relatable illustration" },
+  "ministryFlow": { "giftOfKnowledge": "Prophetic word with scripture", "impartation": "Impartation with promise", "edification": "Encouragement with scripture", "slowDown": "Reflective pause with verse", "returnToAnchor": "Return to anchor scripture" },
+  "summary": { "keyTakeaways": ["Takeaway 1 with scripture ref", "Takeaway 2 with scripture ref", "Takeaway 3 with scripture ref"] },
+  "altarCall": { "invitation": "Invitation with scripture promise", "prayer": "Short guided salvation prayer" },
+  "closingPrayer": "Scripture-woven blessing 2-3 sentences",
   "alternativeTitles": ["Alt title 1", "Alt title 2"]
 }`;
 
@@ -127,7 +78,7 @@ Return this complete JSON:
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
+        max_tokens: 1500,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
