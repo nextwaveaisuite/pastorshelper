@@ -396,7 +396,150 @@ export default function Dashboard() {
     doc.save(`${(title).replace(/\s+/g, "_")}.pdf`);
   };
 
-  if (!user) return <div style={{ minHeight: "100vh", background: "#0f0a05", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#f59e0b" }}>Loading...</p></div>;
+  const exportPrayerPDF = async () => {
+    if (!generatedPrayer) return;
+    const { default: jsPDF } = await import("jspdf");
+    const p = generatedPrayer as { title?: string; type?: string; openingDeclaration?: { text?: string; scripture?: string }; prayerSections?: { heading?: string; prayer?: string; scripture?: string; congregationalResponse?: string }[]; corporateDeclaration?: { instruction?: string; declaration?: string }; closingBlessing?: { text?: string; scripture?: string } };
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const W = 210; const M = 18; const C = W - M * 2;
+    let y = 0; let pageNum = 1;
+    const isWarfare = p.type === "Warfare";
+
+    const checkPage = (needed = 20) => {
+      if (y + needed > 272) {
+        doc.setFillColor(139, 92, 246); doc.rect(0, 285, 210, 1.5, "F");
+        doc.setFontSize(8); doc.setTextColor(100, 85, 65);
+        doc.text("✝  The Pastors Helper", M, 291);
+        doc.text(`Page ${pageNum}`, W - M, 291, { align: "right" });
+        doc.addPage(); pageNum++;
+        doc.setFillColor(139, 92, 246); doc.rect(0, 0, 210, 2, "F");
+        y = 12;
+      }
+    };
+
+    // Header
+    doc.setFillColor(20, 10, 35); doc.rect(0, 0, 210, 52, "F");
+    doc.setFillColor(139, 92, 246); doc.rect(0, 50, 210, 2, "F");
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.setTextColor(167, 139, 250);
+    doc.text(isWarfare ? "⚔  WARFARE PRAYER  —  THE PASTORS HELPER" : "🙏  MINISTRY PRAYER  —  THE PASTORS HELPER", M, 16);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+    doc.setTextColor(254, 243, 199);
+    const titleLines = doc.splitTextToSize(p.title || (isWarfare ? "Warfare Prayer" : "General Prayer"), C);
+    titleLines.forEach((line: string, i: number) => doc.text(line, M, 28 + i * 8));
+    if (prayerTopic) {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+      doc.setTextColor(139, 92, 200);
+      doc.text(prayerTopic, M, 47);
+    }
+    y = 62;
+
+    const sectionHead = (label: string) => {
+      checkPage(16); y += 4;
+      doc.setFillColor(139, 92, 246); doc.rect(M, y, C, 0.4, "F");
+      y += 4;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+      doc.setTextColor(139, 92, 246);
+      doc.text(label.toUpperCase(), M, y + 4);
+      y += 9;
+      doc.setFillColor(139, 92, 246); doc.rect(M, y, C, 0.2, "F");
+      y += 5;
+    };
+
+    const bodyText = (text: string, italic = false) => {
+      checkPage(8);
+      doc.setFont("helvetica", italic ? "italic" : "normal");
+      doc.setFontSize(10); doc.setTextColor(30, 20, 10);
+      doc.splitTextToSize(text, C).forEach((l: string) => { checkPage(6); doc.text(l, M, y); y += 5.5; });
+    };
+
+    // Opening Declaration
+    if (p.openingDeclaration?.text) {
+      sectionHead("Opening Declaration");
+      doc.setFillColor(240, 235, 255); doc.rect(M, y, C, 2, "F");
+      doc.setFillColor(139, 92, 246); doc.rect(M, y, 2, 24, "F");
+      doc.setFillColor(240, 235, 255); doc.rect(M + 2, y, C - 2, 24, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+      doc.setTextColor(80, 40, 120);
+      doc.splitTextToSize(p.openingDeclaration.text, C - 8).forEach((l: string, i: number) => doc.text(l, M + 6, y + 7 + i * 5.5));
+      y += 28;
+      if (p.openingDeclaration.scripture) {
+        doc.setFont("helvetica", "italic"); doc.setFontSize(8.5); doc.setTextColor(139, 92, 246);
+        doc.splitTextToSize("✝ " + p.openingDeclaration.scripture, C).forEach((l: string) => { checkPage(6); doc.text(l, M, y); y += 4.5; });
+      }
+      y += 4;
+    }
+
+    // Prayer Sections
+    (p.prayerSections || []).forEach((ps, i) => {
+      checkPage(30);
+      sectionHead((isWarfare ? "⚔ " : "🙏 ") + (ps.heading || `Section ${i + 1}`));
+      if (ps.prayer) { bodyText(ps.prayer); y += 3; }
+      if (ps.scripture) {
+        checkPage(10);
+        doc.setFont("helvetica", "italic"); doc.setFontSize(8.5);
+        doc.setTextColor(139, 92, 180);
+        doc.splitTextToSize("✝ " + ps.scripture, C).forEach((l: string) => { checkPage(6); doc.text(l, M, y); y += 4.5; });
+        y += 3;
+      }
+      if (ps.congregationalResponse) {
+        checkPage(18);
+        doc.setFillColor(240, 235, 255); doc.rect(M, y, C, 2, "F");
+        doc.setFillColor(139, 92, 246); doc.rect(M, y, 2, 14, "F");
+        doc.setFillColor(240, 235, 255); doc.rect(M + 2, y, C - 2, 14, "F");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7.5);
+        doc.setTextColor(139, 92, 246); doc.text("CONGREGATION", M + 6, y + 5);
+        doc.setFont("helvetica", "italic"); doc.setFontSize(10);
+        doc.setTextColor(60, 20, 100);
+        doc.splitTextToSize(`"${ps.congregationalResponse}"`, C - 8).forEach((l: string, li: number) => doc.text(l, M + 6, y + 10 + li * 5));
+        y += 18;
+      }
+      y += 4;
+    });
+
+    // Corporate Declaration
+    if (p.corporateDeclaration?.declaration) {
+      checkPage(30);
+      sectionHead("Corporate Declaration");
+      if (p.corporateDeclaration.instruction) {
+        doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(100, 85, 65);
+        doc.text(p.corporateDeclaration.instruction, M, y); y += 7;
+      }
+      doc.setFillColor(235, 225, 255); doc.rect(M, y, C, 2, "F");
+      doc.setFillColor(100, 60, 200); doc.rect(M, y, C, 2, "F");
+      const declLines = doc.splitTextToSize(`"${p.corporateDeclaration.declaration}"`, C - 8);
+      const boxH = declLines.length * 6 + 14;
+      doc.setFillColor(235, 225, 255); doc.rect(M, y, C, boxH, "F");
+      doc.setFillColor(139, 92, 246); doc.rect(M, y, C, 1.5, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+      doc.setTextColor(40, 10, 80);
+      declLines.forEach((l: string, li: number) => { checkPage(8); doc.text(l, M + 4, y + 10 + li * 6); });
+      y += boxH + 6;
+    }
+
+    // Closing Blessing
+    if (p.closingBlessing?.text) {
+      checkPage(20);
+      sectionHead("Closing Blessing");
+      bodyText(p.closingBlessing.text, true);
+      if (p.closingBlessing.scripture) {
+        y += 3;
+        doc.setFont("helvetica", "italic"); doc.setFontSize(8.5); doc.setTextColor(139, 92, 246);
+        doc.splitTextToSize("✝ " + p.closingBlessing.scripture, C).forEach((l: string) => { checkPage(6); doc.text(l, M, y); y += 4.5; });
+      }
+    }
+
+    // Final footer
+    doc.setFillColor(139, 92, 246); doc.rect(0, 285, 210, 1.5, "F");
+    doc.setFontSize(8); doc.setTextColor(100, 85, 65);
+    doc.text("✝  The Pastors Helper", M, 291);
+    doc.text(`Page ${pageNum}`, W - M, 291, { align: "right" });
+
+    const filename = (p.title || "prayer").replace(/\s+/g, "_");
+    doc.save(`${filename}.pdf`);
+  };
+
+    if (!user) return <div style={{ minHeight: "100vh", background: "#0f0a05", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#f59e0b" }}>Loading...</p></div>;
 
   const s = { card: { background: "rgba(255,255,255,0.02)", border: "1px solid rgba(245,158,11,0.1)", borderRadius: "12px", padding: "20px" } as React.CSSProperties };
 
@@ -656,6 +799,7 @@ export default function Dashboard() {
                   <div>
                     <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
                       <button onClick={savePrayer} disabled={savingPrayer || savedPrayer} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", border: `1px solid ${savedPrayer ? "rgba(74,222,128,0.3)" : "rgba(139,92,246,0.3)"}`, color: savedPrayer ? "#4ade80" : "#a78bfa", cursor: "pointer", fontSize: "14px" }}>{savingPrayer ? "Saving..." : savedPrayer ? "✓ Saved" : "💾 Save Prayer"}</button>
+                      <button onClick={exportPrayerPDF} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(139,92,246,0.2)", color: "#a78bfa", cursor: "pointer", fontSize: "14px" }}>📄 PDF</button>
                       <button onClick={() => { setGeneratedPrayer(null); setSavedPrayer(false); }} style={{ padding: "10px 20px", borderRadius: "8px", background: "transparent", border: "1px solid rgba(139,92,246,0.2)", color: "#57534e", cursor: "pointer", fontSize: "14px" }}>↺ New Prayer</button>
                     </div>
                     <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
