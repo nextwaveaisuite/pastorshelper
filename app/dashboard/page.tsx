@@ -149,26 +149,256 @@ export default function Dashboard() {
   const exportPDF = async () => {
     if (!generatedSermon) return;
     const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF(); let y = 20;
-    doc.setFontSize(18); doc.text((generatedSermon.title as string) || "Sermon", 20, y); y += 12;
-    doc.setFontSize(10);
-    const add = (heading: string, text: string) => {
-      if (y > 265) { doc.addPage(); y = 20; }
-      doc.setFont("helvetica", "bold"); doc.text(heading.toUpperCase(), 20, y); y += 6;
-      doc.setFont("helvetica", "normal");
-      doc.splitTextToSize(text, 170).forEach((l: string) => { if (y > 270) { doc.addPage(); y = 20; } doc.text(l, 20, y); y += 5; });
-      y += 6;
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const W = 210; const MARGIN = 18; const CONTENT = W - MARGIN * 2;
+    let y = 0; let pageNum = 1;
+
+    const gold  = [180, 140, 60]  as [number,number,number];
+    const dark  = [25, 16, 6]     as [number,number,number];
+    const brown = [90, 60, 20]    as [number,number,number];
+    const cream = [254, 248, 235] as [number,number,number];
+    const grey  = [100, 85, 65]   as [number,number,number];
+    const black = [30, 20, 10]    as [number,number,number];
+
+    const checkPage = (needed = 20) => {
+      if (y + needed > 272) {
+        // Footer on current page
+        doc.setFillColor(...gold); doc.rect(0, 285, 210, 1.5, "F");
+        doc.setFontSize(8); doc.setTextColor(...grey);
+        doc.text("✝  The Pastors Helper", MARGIN, 291);
+        doc.text(`Page ${pageNum}`, W - MARGIN, 291, { align: "right" });
+        doc.addPage(); pageNum++; y = 0;
+        // Thin gold top bar on new pages
+        doc.setFillColor(...gold); doc.rect(0, 0, 210, 2, "F");
+        y = 12;
+      }
     };
-    const anch = generatedSermon.anchorScripture as Record<string, string>;
-    if (anch) add("Anchor Scripture", `${anch.reference}\n${anch.kjv}`);
-    if (generatedSermon.theme) add("Theme", generatedSermon.theme as string);
-    const op = generatedSermon.opening as Record<string, string>;
-    if (op) add("Opening", `${op.greeting}\n${op.hook}`);
-    (generatedSermon.teachingPoints as Record<string, string>[] || []).forEach((p, i) => add(`Point ${i + 1}: ${p.title}`, `${p.scripture}\n\n${p.explanation}\n\nApplication: ${p.application}`));
-    const ac = generatedSermon.altarCall as Record<string, string>;
-    if (ac) add("Altar Call", `${ac.invitation}\n\n${ac.prayer}`);
-    if (generatedSermon.closingPrayer) add("Closing Prayer", generatedSermon.closingPrayer as string);
-    doc.save(`${((generatedSermon.title as string) || "sermon").replace(/\s+/g, "_")}.pdf`);
+
+    // ── COVER HEADER ──────────────────────────────────────────────
+    doc.setFillColor(...dark); doc.rect(0, 0, 210, 52, "F");
+    doc.setFillColor(...gold[0], ...gold.slice(1) as [number,number]); doc.rect(0, 50, 210, 2, "F");
+
+    // Cross symbol
+    doc.setFontSize(20); doc.setTextColor(180, 140, 60);
+    doc.text("✝", MARGIN, 18);
+
+    // App name
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.setTextColor(200, 170, 100);
+    doc.text("THE PASTORS HELPER", MARGIN + 10, 17);
+
+    // Sermon title
+    const title = (generatedSermon.title as string) || "Sermon";
+    doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+    doc.setTextColor(254, 243, 199);
+    const titleLines = doc.splitTextToSize(title, CONTENT);
+    titleLines.forEach((line: string, i: number) => {
+      doc.text(line, MARGIN, 30 + i * 8);
+    });
+
+    // Meta tags
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+    doc.setTextColor(160, 130, 80);
+    const meta = [level, tone, language, audience].filter(Boolean).join("  ·  ");
+    doc.text(meta, MARGIN, 47);
+
+    y = 62;
+
+    // ── ANCHOR SCRIPTURE ──────────────────────────────────────────
+    const anch = generatedSermon.anchorScripture as Record<string,string>;
+    if (anch?.reference) {
+      checkPage(30);
+      // Gold left bar
+      doc.setFillColor(...gold); doc.rect(MARGIN, y, 1.5, 22, "F");
+      // Light cream background
+      doc.setFillColor(...cream); doc.rect(MARGIN + 1.5, y, CONTENT - 1.5, 22, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+      doc.setTextColor(...brown);
+      doc.text("ANCHOR SCRIPTURE  —  " + anch.reference, MARGIN + 5, y + 6);
+      doc.setFont("helvetica", "italic"); doc.setFontSize(10);
+      doc.setTextColor(...dark);
+      const sv = doc.splitTextToSize(`"${anch.kjv}"`, CONTENT - 8);
+      sv.forEach((l: string, i: number) => doc.text(l, MARGIN + 5, y + 13 + i * 5));
+      y += 26; checkPage(5);
+    }
+
+    // ── Helper: section heading ────────────────────────────────────
+    const sectionHead = (label: string) => {
+      checkPage(16);
+      y += 6;
+      doc.setFillColor(...gold); doc.rect(MARGIN, y, CONTENT, 0.5, "F");
+      y += 4;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+      doc.setTextColor(...gold);
+      doc.text(label.toUpperCase(), MARGIN, y + 4);
+      y += 9;
+      doc.setFillColor(...gold); doc.rect(MARGIN, y, CONTENT, 0.3, "F");
+      y += 5;
+    };
+
+    // ── Helper: body text ─────────────────────────────────────────
+    const bodyText = (text: string, indent = 0, italic = false) => {
+      checkPage(8);
+      doc.setFont("helvetica", italic ? "italic" : "normal");
+      doc.setFontSize(10); doc.setTextColor(...black);
+      doc.splitTextToSize(text, CONTENT - indent).forEach((l: string) => {
+        checkPage(6); doc.text(l, MARGIN + indent, y); y += 5.5;
+      });
+    };
+
+    // ── Helper: label + text ──────────────────────────────────────
+    const labelText = (label: string, text: string) => {
+      checkPage(10);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+      doc.setTextColor(...brown); doc.text(label, MARGIN, y); y += 5;
+      bodyText(text);
+      y += 2;
+    };
+
+    // ── OPENING ───────────────────────────────────────────────────
+    const op = generatedSermon.opening as Record<string,string>;
+    if (op?.greeting) {
+      sectionHead("Opening");
+      bodyText(op.greeting); y += 2;
+      if (op.hook) bodyText(op.hook, 0, true);
+    }
+
+    // ── FOUNDATION ────────────────────────────────────────────────
+    const fn = generatedSermon.foundation as Record<string,string>;
+    if (fn?.context) {
+      sectionHead("Foundation");
+      bodyText(fn.context); y += 2;
+      if (fn.breakdown) bodyText(fn.breakdown);
+    }
+
+    // ── FOREWORD ──────────────────────────────────────────────────
+    const fw = generatedSermon.foreword as Record<string,string>;
+    if (fw?.whyItMatters) {
+      sectionHead("Foreword");
+      bodyText(fw.whyItMatters); y += 2;
+      if (fw.relatable) bodyText(fw.relatable, 0, true);
+    }
+
+    // ── TEACHING POINTS ───────────────────────────────────────────
+    const pts = (generatedSermon.teachingPoints as Record<string,unknown>[] || []);
+    if (pts.length) {
+      sectionHead("Core Teaching");
+      pts.forEach((p, i) => {
+        checkPage(30);
+        // Point number badge
+        doc.setFillColor(...gold); doc.rect(MARGIN, y, 5, 5, "F");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7);
+        doc.setTextColor(255,255,255); doc.text(`${i+1}`, MARGIN + 1.5, y + 3.5);
+        // Point title
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+        doc.setTextColor(...dark);
+        doc.text(p.title as string, MARGIN + 7, y + 4);
+        y += 9;
+        // Scripture
+        if (p.scripture) {
+          checkPage(10);
+          doc.setFillColor(...cream); doc.rect(MARGIN, y, CONTENT, 0, "F");
+          doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+          doc.setTextColor(...brown);
+          const sref = (p.scripture as string).split("—")[0]?.trim() || "";
+          const stext = (p.scripture as string).split("—").slice(1).join("—").trim();
+          if (sref) { doc.text(sref, MARGIN, y); y += 4; }
+          doc.setFont("helvetica", "italic"); doc.setFontSize(9.5);
+          doc.setTextColor(...dark);
+          doc.splitTextToSize(stext || p.scripture as string, CONTENT - 4).forEach((l: string) => {
+            checkPage(6); doc.text(l, MARGIN + 4, y); y += 5;
+          });
+        }
+        // Supporting scriptures
+        (p.supportingScriptures as string[] || []).forEach(ss => {
+          checkPage(8);
+          doc.setFont("helvetica", "italic"); doc.setFontSize(8.5);
+          doc.setTextColor(...grey);
+          doc.splitTextToSize("↳ " + ss, CONTENT - 4).forEach((l: string) => {
+            checkPage(6); doc.text(l, MARGIN + 4, y); y += 4.5;
+          });
+        });
+        y += 3;
+        // Explanation
+        if (p.explanation) { checkPage(8); bodyText(p.explanation as string); y += 2; }
+        // Application box
+        if (p.application) {
+          checkPage(16);
+          doc.setFillColor(245, 238, 220); doc.rect(MARGIN, y, CONTENT, 1, "F");
+          doc.setFillColor(...gold); doc.rect(MARGIN, y, 2, 10, "F");
+          doc.setFillColor(245, 238, 220); doc.rect(MARGIN + 2, y, CONTENT - 2, 10, "F");
+          doc.setFont("helvetica", "bold"); doc.setFontSize(7.5);
+          doc.setTextColor(...brown); doc.text("APPLICATION", MARGIN + 5, y + 4);
+          doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+          doc.setTextColor(...dark);
+          doc.splitTextToSize(p.application as string, CONTENT - 8).forEach((l: string, li: number) => {
+            doc.text(l, MARGIN + 5, y + 4 + (li+1) * 4.5);
+          });
+          y += 14; checkPage(4);
+        }
+        if (i < pts.length - 1) { doc.setFillColor(220, 200, 160); doc.rect(MARGIN, y, CONTENT, 0.3, "F"); y += 6; }
+      });
+    }
+
+    // ── MINISTRY FLOW ─────────────────────────────────────────────
+    const mf = generatedSermon.ministryFlow as Record<string,string>;
+    if (mf?.giftOfKnowledge) {
+      sectionHead("Ministry Flow");
+      [["Gift of Knowledge", mf.giftOfKnowledge], ["Impartation", mf.impartation], ["Edification", mf.edification], ["Slow Down", mf.slowDown], ["Return to Anchor", mf.returnToAnchor]].forEach(([lbl, txt]) => {
+        if (txt) { checkPage(12); labelText(lbl, txt); }
+      });
+    }
+
+    // ── SUMMARY ───────────────────────────────────────────────────
+    const sum = generatedSermon.summary as Record<string,string[]>;
+    if (sum?.keyTakeaways?.length) {
+      sectionHead("Summary");
+      sum.keyTakeaways.forEach((t, i) => {
+        checkPage(10);
+        doc.setFillColor(...gold); doc.circle(MARGIN + 2, y - 1, 1, "F");
+        doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...black);
+        doc.splitTextToSize(t, CONTENT - 8).forEach((l: string, li: number) => {
+          checkPage(6); doc.text(l, MARGIN + 6, y + li * 5);
+        });
+        y += 7;
+      });
+    }
+
+    // ── ALTAR CALL ────────────────────────────────────────────────
+    const ac = generatedSermon.altarCall as Record<string,string>;
+    if (ac?.invitation) {
+      checkPage(20);
+      sectionHead("Altar Call");
+      bodyText(ac.invitation); y += 4;
+      if (ac.prayer) {
+        checkPage(20);
+        doc.setFillColor(...cream); doc.rect(MARGIN, y, CONTENT, 2, "F");
+        doc.setFillColor(...gold); doc.rect(MARGIN, y, 2, 30, "F");
+        doc.setFillColor(...cream); doc.rect(MARGIN + 2, y, CONTENT - 2, 30, "F");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+        doc.setTextColor(...brown); doc.text("GUIDED PRAYER", MARGIN + 6, y + 5);
+        doc.setFont("helvetica", "italic"); doc.setFontSize(10);
+        doc.setTextColor(...dark);
+        doc.splitTextToSize(ac.prayer, CONTENT - 10).forEach((l: string, li: number) => {
+          doc.text(l, MARGIN + 6, y + 11 + li * 5.5);
+        });
+        y += 36;
+      }
+    }
+
+    // ── CLOSING PRAYER ────────────────────────────────────────────
+    if (generatedSermon.closingPrayer) {
+      sectionHead("Closing Prayer");
+      bodyText(generatedSermon.closingPrayer as string, 0, true);
+    }
+
+    // ── FINAL FOOTER ──────────────────────────────────────────────
+    doc.setFillColor(...gold); doc.rect(0, 285, 210, 1.5, "F");
+    doc.setFontSize(8); doc.setTextColor(...grey);
+    doc.text("✝  The Pastors Helper", MARGIN, 291);
+    doc.text(`Page ${pageNum}`, W - MARGIN, 291, { align: "right" });
+
+    doc.save(`${(title).replace(/\s+/g, "_")}.pdf`);
   };
 
   if (!user) return <div style={{ minHeight: "100vh", background: "#0f0a05", display: "flex", alignItems: "center", justifyContent: "center" }}><p style={{ color: "#f59e0b" }}>Loading...</p></div>;
